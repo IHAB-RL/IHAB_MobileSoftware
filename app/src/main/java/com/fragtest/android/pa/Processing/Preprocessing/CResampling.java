@@ -6,6 +6,9 @@
 
 package com.fragtest.android.pa.Processing.Preprocessing;
 
+import android.os.SystemClock;
+import android.util.Log;
+
 public class CResampling {
 
 	private int m_xpos1_ds;
@@ -81,27 +84,33 @@ public class CResampling {
 
 	public float[] Downsample2f(float[] inbuf, int numoutsamples) {
 
-		int mm = 0;
+
+//        int mm = 0;
 		float outval;
 		float[] outbuf = new float[numoutsamples];
-		
-		
-		for ( int kk = 0; kk < numoutsamples; kk++ ) {
-			
-			m_xvec1_ds[m_xpos1_ds++]=inbuf[mm++]; // downsampling
-			m_xvec2_ds[m_xpos2_ds++]=inbuf[mm++];
-			m_xpos1_ds&=63;
-			m_xpos2_ds%=33;
-			outval=m_xvec2_ds[m_xpos2_ds];
-			
-			for ( int jj = 0; jj < 32; jj++ ) // anti-alias-filtering
-				outval+=(m_xvec1_ds[(m_xpos1_ds+jj)&63]+m_xvec1_ds[(63+m_xpos1_ds-jj)&63])*m_bcoeff_ds[jj];
-			
-			outbuf[kk] = outval / 2;
-			
+
+//        long start, stop;
+//        start = SystemClock.elapsedRealtimeNanos();
+
+        for ( int kk = 0; kk < numoutsamples; kk++ ) {
+
+			m_xvec1_ds[kk % 63]=inbuf[2*kk]; // downsampling
+            m_xvec2_ds[kk % 33]=inbuf[2*kk+1];
+//            m_xpos1_ds&=63;
+//            m_xpos2_ds%=33;
+            outval=m_xvec2_ds[kk % 33];
+
+            for ( int jj = 0; jj < 32; jj++ ) { // anti-alias-filtering
+                outval += (m_xvec1_ds[(kk + jj) % 63] + m_xvec1_ds[(63 + kk - jj) % 63]) * m_bcoeff_ds[jj];
+            }
+            outbuf[kk] = outval * 0.5f;
+
 		}
-		
-		return outbuf; 
+
+//        stop = SystemClock.elapsedRealtimeNanos();
+//        Log.d("CResampling", "Downsampling: " + (stop - start));
+
+        return outbuf;
 		
 	}
 
@@ -129,9 +138,10 @@ public class CResampling {
 			outval1=m_xvec_us[(31+m_xpos_us)&63]*0.5f; // middle coefficient of anti-alias filter (0.5f)
 			outval2=0.f;
 			
-			for ( int jj = 0; jj < 32; jj++ ) // rest of anti-alias filtering
-				outval2+=(m_xvec_us[(m_xpos_us+jj)&63]+m_xvec_us[(63+m_xpos_us-jj)&63])*m_bcoeff_us[jj];
-			
+			for ( int jj = 0; jj < 32; jj++ ) { // rest of anti-alias filtering
+                outval2 += (m_xvec_us[(m_xpos_us + jj) & 63] + m_xvec_us[(63 + m_xpos_us - jj) & 63]) * m_bcoeff_us[jj];
+            }
+
 			outbuf[mm++]=outval1; // upsampling
 			outbuf[mm++]=outval2;
 			

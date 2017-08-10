@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -24,7 +25,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
+import com.fragtest.android.pa.Test.TestIO;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.Buffer;
 import java.util.ArrayList;
 
 import static android.R.color.darker_gray;
@@ -134,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         Log.i(LOG,"You like pressed the back button but i like don't like wanna do it...");
     }
+
 
     // Send message to connected client
     public void messageService(int what) {
@@ -262,6 +273,8 @@ public class MainActivity extends AppCompatActivity {
         mWindow.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+//        new TestIO();
     }
 
     @Override

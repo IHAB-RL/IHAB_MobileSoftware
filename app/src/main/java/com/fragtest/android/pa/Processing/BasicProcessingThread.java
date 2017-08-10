@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.SystemClock;
+import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
@@ -27,7 +29,7 @@ import java.util.Set;
 
 public class BasicProcessingThread extends Thread {
 
-	protected static final String LOG = "HALLO:Processing";
+	protected static final String LOG = "PROCESSING";
 	protected static final int DONE = 1;
 	
 	private Messenger serviceMessenger = null;	// instance of messenger to communicate with service
@@ -45,8 +47,11 @@ public class BasicProcessingThread extends Thread {
     private Set<String> activeFeatures;
     private int processedFeatures = 0;
 	private ArrayList<String> featureFiles = new ArrayList<String>();
-	
-	
+
+    static {
+        System.loadLibrary("CResampling");
+    }
+
 	// constructor
 	public BasicProcessingThread(Messenger messenger, Bundle settings){
 
@@ -117,28 +122,34 @@ public class BasicProcessingThread extends Thread {
 		}
 
 		if (filterHp) {
+            long start = System.currentTimeMillis();
+
 			// high-pass filter
 			FilterHP hp = new FilterHP(samplerate, filterHpFrequency);
 
 			for (int kk = 0; kk < 2; kk++) {
 				audioData[kk] = hp.filter(audioData[kk]);
 			}
+
+            Log.d(LOG, "filtering: " + (System.currentTimeMillis()-start));
 		}
 
         // downsample audio data
 		if (downsample) {
 
+            long start = System.currentTimeMillis();
             samplerate /= 2;
 
 			float[][] audioData_ds = new float[2][frames/2];
-			
+
 			CResampling cr = new CResampling();
-			
+
 			for ( int kk = 0; kk < 2; kk++ ) {
 				audioData_ds[kk] = cr.Downsample2f(audioData[kk], audioData_ds[kk].length);
-				cr.reset();
-			}
+                cr.reset();
+            }
 
+            Log.d(LOG, "downsampling: " + (System.currentTimeMillis()-start));
 			return audioData_ds;
 		} else {
 			return audioData;
@@ -192,7 +203,6 @@ public class BasicProcessingThread extends Thread {
             	Bundle b = msg.getData();
 				String featureFile = b.getString("featureFile");
             	featureFiles.add(featureFile);
-				Logger.info("New feature:\t{}", featureFile);
             	isFinished();
             	break;
             default:
@@ -200,4 +210,7 @@ public class BasicProcessingThread extends Thread {
             }
         }
 	}
+
 }
+
+

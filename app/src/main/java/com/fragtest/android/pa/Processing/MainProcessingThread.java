@@ -2,6 +2,7 @@ package com.fragtest.android.pa.Processing;
 
 import android.os.Bundle;
 import android.os.Messenger;
+import android.util.Log;
 
 import com.fragtest.android.pa.Processing.Features.Loop;
 import com.fragtest.android.pa.Processing.Features.PSD;
@@ -58,7 +59,11 @@ public class MainProcessingThread extends BasicProcessingThread{
 			PSD cpsdRunnable = new PSD(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
+			Log.d(LOG, "Started runnable: PSD");
+
+            long time = System.currentTimeMillis();
 			cpsdRunnable.run();
+            Log.d(LOG, "Elapsed time: " + (System.currentTimeMillis() - time));
 		}
 		
 		if (isActiveFeature("RMS")) {
@@ -69,7 +74,11 @@ public class MainProcessingThread extends BasicProcessingThread{
 			RMS rmsRunnable = new RMS(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
+			Log.d(LOG, "Started runnable: RMS");
+
+			long time = System.currentTimeMillis();
 			rmsRunnable.run();
+			Log.d(LOG, "Elapsed time: " + (System.currentTimeMillis() - time));
 		}
 
 		if (isActiveFeature("ZCR")) {
@@ -77,10 +86,14 @@ public class MainProcessingThread extends BasicProcessingThread{
 			nHop = nProcSamples / 2;
 			nProcOutSamples = nProcSamples;		
 			nFeatures = 4; // [left right delta_left delta_right] 
-			ZCR zcRunnable = new ZCR(audioData, nProcSamples, nHop, nProcOutSamples,
+			ZCR zcrRunnable = new ZCR(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
-			zcRunnable.run();
+            Log.d(LOG, "Started runnable: ZCR");
+
+			long time = System.currentTimeMillis();
+			zcrRunnable.run();
+			Log.d(LOG, "Elapsed time: " + (System.currentTimeMillis() - time));
 		}				
 	
 		if (isActiveFeature("Loop")) {
@@ -92,7 +105,11 @@ public class MainProcessingThread extends BasicProcessingThread{
 			Loop loopRunnable = new Loop(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
+			Log.d(LOG, "Started runnable: Loop");
+
+			long time = System.currentTimeMillis();
 			loopRunnable.run();
+			Log.d(LOG, "Elapsed time: " + (System.currentTimeMillis() - time));
 		}
 
 	}

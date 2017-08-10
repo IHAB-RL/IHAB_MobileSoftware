@@ -1,13 +1,13 @@
 package com.fragtest.android.pa.Processing.Features;
 
 import android.os.Messenger;
+import android.util.Log;
 
 import com.fragtest.android.pa.Processing.BasicProcessRunnable;
 
 public class ZCR extends BasicProcessRunnable
 {
-	public ZCR(float[][] data, int processBlock, int nHop, int nProcOutSamples, int nFeatures, Messenger messenger)
-	{
+	public ZCR(float[][] data, int processBlock, int nHop, int nProcOutSamples, int nFeatures, Messenger messenger) {
 		super(data, processBlock, nHop, nProcOutSamples, nFeatures, messenger);
 		setFeature( "ZCR" );
 	}
@@ -19,18 +19,15 @@ public class ZCR extends BasicProcessRunnable
 		
 		float[] result = new float[nFeatures];
 
-		for ( int iChannel = 0; iChannel < data.length; iChannel++ ) { 
-
-			result[iChannel] = zcr( data[iChannel] );	
+		for ( int iChannel = 0; iChannel < data.length; iChannel++ ) {
+			result[iChannel] = zcr( data[iChannel] );
 			result[iChannel + 2] = zcr( diff( data[iChannel] ) );
 		}
 		
-	appendFeature( result );
-		
+		appendFeature(result);
 	}
 	
-	private static int zcr( float in[] ) 
-	{
+	private static int zcr(float in[]) {
 		int count = 0;
 		float data_sign[] = new float[in.length];
 
@@ -46,8 +43,7 @@ public class ZCR extends BasicProcessRunnable
 		return count;
 	}
 	
-	private float[] diff(float[] data) 
-	{
+	private float[] diff(float[] data) {
 		float[] delta = new float [data.length-1];
 		
 		for (int kk = 0; kk < data.length-1; kk++)
