@@ -18,6 +18,7 @@ import org.pmw.tinylog.Logger;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -49,12 +50,12 @@ public class BasicProcessingThread extends Thread {
 	
 	
 	// constructor
-	public BasicProcessingThread(Messenger messenger, Bundle settings){
+	public BasicProcessingThread(Messenger messenger, Queue queue, Bundle settings){
 
         serviceMessenger = messenger;
 
         samplerate = settings.getInt("samplerate");
-        chunklengthInS = settings.getInt("chunklengthInS");
+//        chunklengthInS = settings.getInt("chunklengthInS");
         activeFeatures = (Set) settings.getSerializable("activeFeatures");
         filterHp = settings.getBoolean("filterHp");
         filterHpFrequency = settings.getInt("filterHpFrequency");
@@ -62,8 +63,8 @@ public class BasicProcessingThread extends Thread {
         downsample = settings.getBoolean("downsample", false);
 
         // extract timestamp from filename
-        timestamp = filename.substring(filename.lastIndexOf("/")+1);
-        timestamp = timestamp.substring(0, timestamp.lastIndexOf("."));
+//        timestamp = filename.substring(filename.lastIndexOf("/")+1);
+//        timestamp = timestamp.substring(0, timestamp.lastIndexOf("."));
 	}
 
 
@@ -88,22 +89,22 @@ public class BasicProcessingThread extends Thread {
 	private float[][] readAllData() {
 
         // skip wave header
-        int skip = 0;
-        if (filename.substring(filename.lastIndexOf(".") + 1, filename.length())
-                .equals(AudioFileIO.CACHE_WAVE)) {
-            skip = 44;
-        }
+//        int skip = 0;
+//        if (filename.substring(filename.lastIndexOf(".") + 1, filename.length())
+//                .equals(AudioFileIO.CACHE_WAVE)) {
+//            skip = 44;
+//        }
 
-        try {
-            // load data from cache
-            RandomAccessFile inputFile = new RandomAccessFile(filename, "r");
-            buffer = new byte[(int) inputFile.length() - skip];
-            inputFile.seek(skip);
-            inputFile.readFully(buffer);
-            inputFile.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            // load data from cache
+//            RandomAccessFile inputFile = new RandomAccessFile(filename, "r");
+//            buffer = new byte[(int) inputFile.length() - skip];
+//            inputFile.seek(skip);
+//            inputFile.readFully(buffer);
+//            inputFile.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
         int blocks = buffer.length / 4;
 

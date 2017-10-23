@@ -13,6 +13,7 @@ import com.fragtest.android.pa.Core.AudioFileIO;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Queue;
 
 /**
  * Record audio using Android's AudioRecorder
@@ -27,18 +28,17 @@ public class AudioRecorder {
 
     private AudioRecord audioRecord;
     private Thread recordingThread;
+    private Queue queue;
     private boolean stopRecording = true;
-    private boolean isWave;
     private int chunklengthInBytes, bufferSize;
     private Messenger messenger;
 
 
-    AudioRecorder(Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
+
+    AudioRecorder(Messenger _messenger, Queue _queue, int _samplerate) {
 
         messenger = _messenger;
-        isWave = _isWave;
-
-        chunklengthInBytes = (_chunklengthInS * _samplerate * CHANNELS * BITS / 8);
+        queue = _queue;
 
         bufferSize = AudioRecord.getMinBufferSize(_samplerate,
                 AudioFormat.CHANNEL_IN_STEREO,
@@ -85,80 +85,24 @@ public class AudioRecorder {
 
         audioRecord.startRecording();
 
-        byte[] buffer = new byte[bufferSize];
-        int bytesToWrite = 0, bytesRemaining = 0;
+        short[] buffer = new short[bufferSize]; // effectively 2x buffersize?
+        float samples = 0;
 
         // recording loop
         while (!stopRecording &&
                 (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING)) {
 
-            // get stream to write audio data to flash memory
-            AudioFileIO fileIO = new AudioFileIO();
-            DataOutputStream outputStream = fileIO.openDataOutStream(
-                    audioRecord.getSampleRate(),
-                    audioRecord.getChannelCount(),
-                    audioRecord.getAudioFormat(),
-                    isWave
-            );
-
-            // write remaining data from last block
-            if (bytesRemaining > 0) {
-                try {
-                    outputStream.write(buffer, bytesToWrite, bytesRemaining);
-                    bytesRemaining = 0;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            // block loop
-            int bytesWritten = 0;
-
-            while (bytesWritten < chunklengthInBytes && !stopRecording) {
-
-                int bytesRead = audioRecord.read(buffer, 0, bufferSize);
-
-                if (bytesRead > 0) {
-
-                    // check for
-                    if (((bytesWritten + bytesRead) > chunklengthInBytes)) {
-                        bytesToWrite = chunklengthInBytes - bytesWritten;
-                        bytesRemaining = bytesWritten - chunklengthInBytes;
-                    } else {
-                        bytesToWrite = bytesRead;
-                    }
-
-                    try {
-                        outputStream.write(buffer, 0, bytesToWrite);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    // total bytes written in this block
-                    bytesWritten += bytesToWrite;
-                }
-            }
-
-            String filename = fileIO.filename;
-            fileIO.closeDataOutStream();
-
-            // report back to service
-            Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
-            if (msg != null) {
-                Bundle data = new Bundle();
-                data.putString("filename", filename);
-                msg.setData(data);
-                try {
-                    messenger.send(msg);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-
+            samples += audioRecord.read(buffer, 0, bufferSize);
+            queue.add(buffer);
         }
 
         audioRecord.stop();
+
+        // report back to service
         Message msg = Message.obtain(null, ControlService.MSG_RECORDING_STOPPED);
+        Bundle data = new Bundle();
+        data.putFloat("totalsamples", samples);
+        msg.setData(data);
         try {
             messenger.send(msg);
         } catch (RemoteException e) {

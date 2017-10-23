@@ -38,6 +38,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * The brains of the operation.
@@ -121,6 +123,9 @@ public class ControlService extends Service {
 
     // Audio recording
     private AudioRecorder audioRecorder;
+
+    // Recording queue to transfer data to the processing thread
+    private Queue<Message> recordingQueue = new ConcurrentLinkedQueue<>();
 
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
@@ -256,13 +261,27 @@ public class ControlService extends Service {
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start caching audio");
                     Logger.info("Start caching audio");
+
+                    // set up recorder
                     audioRecorder = new AudioRecorder(
                             serviceMessenger,
-                            chunklengthInS,
-                            samplerate,
-                            isWave);
+                            recordingQueue,
+                            samplerate);
+
+                    // set up processing
+                    Bundle settings = getPreferences();
+                    MainProcessingThread processingThread =
+                            new MainProcessingThread(serviceMessenger,
+                                    recordingQueue,
+                                    settings);
+
+                    // let's go..
                     audioRecorder.start();
+                    processingThread.start();
+
                     isRecording = true;
+                    isProcessing = true;
+
                     messageClient(MSG_START_RECORDING);
                     break;
 
@@ -281,56 +300,56 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHUNK_RECORDED:
-                    String filename = msg.getData().getString("filename");
-
-                    addProccessingBuffer(idxRecording, filename);
-                    idxRecording = (idxRecording + 1) % processingBufferSize;
-
-                    if (!getIsProcessing()) {
-                        Bundle settings = getPreferences();
-                        settings.putString("filename", processingBuffer[idxProcessing]);;
-                        MainProcessingThread processingThread =
-                                new MainProcessingThread(serviceMessenger, settings);
-                        setIsProcessing(true);
-                        processingThread.start();
-                    }
-
-                    if (keepAudioCache) {
-                        new SingleMediaScanner(context, new File(filename));
-                    }
-
-                    Log.d(LOG, "New cache: " + filename);
-                    Logger.info("New cache:\t{}", filename);
-                    break;
+//                    String filename = msg.getData().getString("filename");
+//
+//                    addProccessingBuffer(idxRecording, filename);
+//                    idxRecording = (idxRecording + 1) % processingBufferSize;
+//
+//                    if (!getIsProcessing()) {
+//                        Bundle settings = getPreferences();
+//                        settings.putString("filename", processingBuffer[idxProcessing]);;
+//                        MainProcessingThread processingThread =
+//                                new MainProcessingThread(serviceMessenger, settings);
+//                        setIsProcessing(true);
+//                        processingThread.start();
+//                    }
+//
+//                    if (keepAudioCache) {
+//                        new SingleMediaScanner(context, new File(filename));
+//                    }
+//
+//                    Log.d(LOG, "New cache: " + filename);
+//                    Logger.info("New cache:\t{}", filename);
+//                    break;
 
                 case MSG_CHUNK_PROCESSED:
 
-                    ArrayList<String> featureFiles = msg.getData().
-                            getStringArrayList("featureFiles");
+//                    ArrayList<String> featureFiles = msg.getData().
+//                            getStringArrayList("featureFiles");
+//
+//                    if (!keepAudioCache) {
+//                        AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
+//                    }
 
-                    if (!keepAudioCache) {
-                        AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
-                    }
+//                    for (String file : featureFiles) {
+//                        if (file != null) {
+//                            new SingleMediaScanner(context, new File(file));
+//                        }
+//                    }
 
-                    for (String file : featureFiles) {
-                        if (file != null) {
-                            new SingleMediaScanner(context, new File(file));
-                        }
-                    }
+//                    deleteProccessingBuffer(idxProcessing);
+//                    idxProcessing = (idxProcessing + 1) % processingBufferSize;
 
-                    deleteProccessingBuffer(idxProcessing);
-                    idxProcessing = (idxProcessing + 1) % processingBufferSize;
-
-                    if (processingBuffer[idxProcessing] != null) {
-                        Bundle settings = getPreferences();
-                        settings.putString("filename", processingBuffer[idxProcessing]);
-                        MainProcessingThread processingThread =
-                                new MainProcessingThread(serviceMessenger, settings);
-                        setIsProcessing(true);
-                        processingThread.start();
-                    } else {
-                        setIsProcessing(false);
-                    }
+//                    if (processingBuffer[idxProcessing] != null) {
+//                        Bundle settings = getPreferences();
+//                        settings.putString("filename", processingBuffer[idxProcessing]);
+//                        MainProcessingThread processingThread =
+//                                new MainProcessingThread(serviceMessenger, settings);
+//                        setIsProcessing(true);
+//                        processingThread.start();
+//                    } else {
+//                        setIsProcessing(false);
+//                    }
 
                     break;
 

@@ -9,6 +9,8 @@ import com.fragtest.android.pa.Processing.Features.PSD;
 import com.fragtest.android.pa.Processing.Features.RMS;
 import com.fragtest.android.pa.Processing.Features.ZCR;
 
+import java.util.Queue;
+
 /**
  * MainProcessingThread overloads mainRoutine() in BasicProcessingThread to start runnables
  * corresponding to selected features.
@@ -26,8 +28,8 @@ import com.fragtest.android.pa.Processing.Features.ZCR;
 
 public class MainProcessingThread extends BasicProcessingThread{
 
-	public MainProcessingThread(Messenger messenger, Bundle b) {
-		super(messenger, b);
+	public MainProcessingThread(Messenger messenger, Queue queue, Bundle b) {
+		super(messenger, queue, b);
 	}
 
 	@Override
