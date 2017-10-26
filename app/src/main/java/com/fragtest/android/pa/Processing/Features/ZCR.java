@@ -2,9 +2,9 @@ package com.fragtest.android.pa.Processing.Features;
 
 import android.os.Messenger;
 
-import com.fragtest.android.pa.Processing.BasicProcessRunnable;
+import com.fragtest.android.pa.Processing.ProcessingRunnable;
 
-public class ZCR extends BasicProcessRunnable
+public class ZCR extends ProcessingRunnable
 {
 	// TODO: check processBlock, value in RMS has different name
 	public ZCR(float[][] data, int processBlock, int nHop, int nProcOutSamples, int nFeatures, Messenger messenger)

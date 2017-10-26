@@ -16,13 +16,13 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 /**
- * BasicProcessRunnable.java
+ * ProcessingRunnable.java
  *
  * Passes cached audio data to the respective processing algorithms and writes the feature-data
  * to storage.
  */
 
-public class BasicProcessRunnable implements Runnable {
+public class ProcessingRunnable implements Runnable {
 
 	protected static final String LOG = "Processing";
 	private static final String EXTENSION = ".feat";
@@ -51,8 +51,8 @@ public class BasicProcessRunnable implements Runnable {
 	private int procOutBlockSize; // one feature output represents this many input samples
 	private float procOutDuration;
 
-	public BasicProcessRunnable(float[][] audioData, int procBlockSize, int procHopSize,
-                                int procOutBlockSize, int nFeatures, Messenger messenger) {
+	public ProcessingRunnable(float[][] audioData, int procBlockSize, int procHopSize,
+                              int procOutBlockSize, int nFeatures, Messenger messenger) {
 
 		// TODO how to handle this parameter-mess properly?
 

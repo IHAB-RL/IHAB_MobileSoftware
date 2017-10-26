@@ -17,7 +17,7 @@ import java.util.Queue;
  *
  * Implement new features:
  * 
- * 1) create a new class by extending BasicProcessRunnable (use e.g. RMS.java as template)
+ * 1) create a new class by extending ProcessingRunnable (use e.g. RMS.java as template)
  * 2) configure, instantiate and start the runnable class here in MainProcessingThread.java (see below)
  * 3) add the feature to res/values/features.xml
  * 
@@ -39,9 +39,9 @@ public class MainProcessingThread extends BasicProcessingThread{
 		int nProcSamples, nHop, nFeatures, nProcOutSamples;
 		double nProcSeconds, nOutSeconds;
 
-		if (isActiveFeature("PSD")) {
+		// these have to go into threads so we can process parallel.
 
-			long start = System.currentTimeMillis();
+		if (isActiveFeature("PSD")) {
 
 			// CPSD takes nProcSeconds of audio data, recursively computes and averages
 			// the cross and auto power spectral densities every 25 ms and returns a
@@ -63,15 +63,11 @@ public class MainProcessingThread extends BasicProcessingThread{
 			PSD cpsdRunnable = new PSD(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
-			cpsdRunnable.run();
+			new Thread(cpsdRunnable).start();
 
-			Log.d(LOG, "PSD took " + (System.currentTimeMillis() - start) + " ms");
-		}
+        }
 		
 		if (isActiveFeature("RMS")) {
-
-			long start = System.currentTimeMillis();
-
 
 			nProcSamples = (int) (0.025f * samplerate); // 25ms
 			nHop = nProcSamples / 2;
@@ -80,15 +76,11 @@ public class MainProcessingThread extends BasicProcessingThread{
 			RMS rmsRunnable = new RMS(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
-			rmsRunnable.run();
+			new Thread(rmsRunnable).start();
 
-			Log.d(LOG, "RMS took " + (System.currentTimeMillis() - start) + " ms");
 		}
 
 		if (isActiveFeature("ZCR")) {
-
-			long start = System.currentTimeMillis();
-
 
 			nProcSamples = (int) (0.025f * samplerate); // 25ms
 			nHop = nProcSamples / 2;
@@ -97,14 +89,11 @@ public class MainProcessingThread extends BasicProcessingThread{
 			ZCR zcrRunnable = new ZCR(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
-			zcrRunnable.run();
+			new Thread(zcrRunnable).start();
 
-			Log.d(LOG, "ZCR took " + (System.currentTimeMillis() - start) + " ms");
-		}				
+		}
 	
 		if (isActiveFeature("Loop")) {
-
-			long start = System.currentTimeMillis();
 
 			nProcSeconds = 5;
 			nProcSamples = (int) (nProcSeconds * samplerate);
@@ -114,15 +103,11 @@ public class MainProcessingThread extends BasicProcessingThread{
 			Loop loopRunnable = new Loop(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 
-			loopRunnable.run();
+			new Thread(loopRunnable).start();
 
-			Log.d(LOG, "Looping took " + (System.currentTimeMillis() - start) + " ms");
 		}
 /*
 		if (isActiveFeature("SRMR")) {
-
-			long start = System.currentTimeMillis();
-
 
 			nProcSamples = (int) (0.025f * samplerate); // 25ms
 			nHop = nProcSamples / 2;
@@ -133,7 +118,6 @@ public class MainProcessingThread extends BasicProcessingThread{
 
 			rmsRunnable.run();
 
-			Log.e(LOG, "SRMR took " + (System.currentTimeMillis() - start) + " ms");
 		}
 */
 	}

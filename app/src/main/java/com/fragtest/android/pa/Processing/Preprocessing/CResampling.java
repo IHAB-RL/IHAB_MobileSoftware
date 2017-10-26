@@ -79,17 +79,17 @@ public class CResampling {
 		
 	}
 
-	public float[] Downsample2f(float[] inbuf, int numoutsamples) {
+	public void Downsample2f(float[] data, int numoutsamples) {
 
 		int mm = 0;
 		float outval;
-		float[] outbuf = new float[numoutsamples];
+		float[] buffer = new float[numoutsamples];
 		
 		
 		for ( int kk = 0; kk < numoutsamples; kk++ ) {
 			
-			m_xvec1_ds[m_xpos1_ds++]=inbuf[mm++]; // downsampling
-			m_xvec2_ds[m_xpos2_ds++]=inbuf[mm++];
+			m_xvec1_ds[m_xpos1_ds++]=data[mm++]; // downsampling
+			m_xvec2_ds[m_xpos2_ds++]=data[mm++];
 			m_xpos1_ds&=63;
 			m_xpos2_ds%=33;
 			outval=m_xvec2_ds[m_xpos2_ds];
@@ -97,34 +97,30 @@ public class CResampling {
 			for ( int jj = 0; jj < 32; jj++ ) // anti-alias-filtering
 				outval+=(m_xvec1_ds[(m_xpos1_ds+jj)&63]+m_xvec1_ds[(63+m_xpos1_ds-jj)&63])*m_bcoeff_ds[jj];
 			
-			outbuf[kk] = outval / 2;
-			
+			buffer[kk] = outval / 2;
+
 		}
-		
-		return outbuf; 
-		
+
+		System.arraycopy(buffer, 0, data, 0, buffer.length);
+
 	}
 
-	public float[] Downsample2fnoLP(float[] inbuf, int numoutsamples) {
-		
-		float[] outbuf = new float[numoutsamples];
+	public void Downsample2fnoLP(float[] data, int numoutsamples) {
 
 		for ( int kk=0; kk < numoutsamples; kk++ ) // simple downsampling by factor 2 without anti-alias filtering
-			outbuf[kk]=inbuf[kk*2]*2.f; // scaling by factor 2 is necessary, to maintain the signal magnitude
-		
-		return outbuf;
+			data[kk]=data[kk*2]*2.f; // scaling by factor 2 is necessary, to maintain the signal magnitude
 		
 	}
 
-	public float[] Upsample2f(float[] inbuf, int numinsamples)	{
+	public void Upsample2f(float[] data, int numinsamples)	{
 		
 		int mm = 0; 
 		float outval1,outval2;
-		float[] outbuf = new float[numinsamples*2];
+		float[] buffer = new float[numinsamples*2];
 		
 		for ( int kk=0; kk < numinsamples; kk++ ) {
 			
-			m_xvec_us[m_xpos_us++]=inbuf[kk];
+			m_xvec_us[m_xpos_us++]=data[kk];
 			m_xpos_us&=63;
 			outval1=m_xvec_us[(31+m_xpos_us)&63]*0.5f; // middle coefficient of anti-alias filter (0.5f)
 			outval2=0.f;
@@ -132,13 +128,13 @@ public class CResampling {
 			for ( int jj = 0; jj < 32; jj++ ) // rest of anti-alias filtering
 				outval2+=(m_xvec_us[(m_xpos_us+jj)&63]+m_xvec_us[(63+m_xpos_us-jj)&63])*m_bcoeff_us[jj];
 			
-			outbuf[mm++]=outval1; // upsampling
-			outbuf[mm++]=outval2;
+			buffer[mm++]=outval1; // upsampling
+			buffer[mm++]=outval2;
 			
 		}
-		
-		return outbuf;
-		
+
+		System.arraycopy(buffer, 0, data, 0, buffer.length);
+
 	}
 	
 }

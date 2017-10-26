@@ -2,9 +2,9 @@ package com.fragtest.android.pa.Processing.Features;
 
 import android.os.Messenger;
 
-import com.fragtest.android.pa.Processing.BasicProcessRunnable;
+import com.fragtest.android.pa.Processing.ProcessingRunnable;
 
-public class RMS extends BasicProcessRunnable {
+public class RMS extends ProcessingRunnable {
 
 	public RMS(float[][] audioData, int procBlockSize, int nHop, int procOutBlockSize, int nFeatures, Messenger messenger) {
 		super(audioData, procBlockSize, nHop, procOutBlockSize, nFeatures, messenger);

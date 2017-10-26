@@ -4,7 +4,7 @@ import android.os.Messenger;
 
 import com.fragtest.android.pa.HelperClasses.ArrayHelper;
 import com.fragtest.android.pa.HelperClasses.Find;
-import com.fragtest.android.pa.Processing.BasicProcessRunnable;
+import com.fragtest.android.pa.Processing.ProcessingRunnable;
 import com.fragtest.android.pa.Processing.Preprocessing.Buffer;
 import com.fragtest.android.pa.Processing.Preprocessing.Envelope;
 import com.fragtest.android.pa.Processing.Preprocessing.FilterBank;
@@ -17,7 +17,7 @@ import static com.fragtest.android.pa.Processing.Preprocessing.FilterBank.comput
  * Created by ul1021 on 18.09.2017.
  */
 
-public class SRMR extends BasicProcessRunnable{
+public class SRMR extends ProcessingRunnable {
 
     private int fsamp, blocklen;
 

@@ -3,10 +3,10 @@ package com.fragtest.android.pa.Processing.Features;
 import android.os.Messenger;
 import android.util.Log;
 
-import com.fragtest.android.pa.Processing.BasicProcessRunnable;
+import com.fragtest.android.pa.Processing.ProcessingRunnable;
 import com.fragtest.android.pa.Processing.Preprocessing.CResampling;
 
-public class Loop extends BasicProcessRunnable {
+public class Loop extends ProcessingRunnable {
 	protected static final String LOG = "Loop";
 	
 	public Loop(float[][] audioData, int procBlockSize, int nHop, int nOutBlockSize, int nFeatures, Messenger messenger) {
@@ -54,26 +54,26 @@ public class Loop extends BasicProcessRunnable {
 	}
 
 	// simple 2:1 downsampling with LP
-	private float[] ds_two(float[][] data) {
-
-		float[][] tmp = new float[data.length][data[0].length / 2];
-		CResampling cr = new CResampling();
-		
-		tmp[0] = cr.Downsample2fnoLP(data[0], tmp[0].length);
-		cr.reset();
-		tmp[1] = cr.Downsample2fnoLP(data[1], tmp[1].length);
-		
-		// interleave
-		float[] result = new float[tmp.length * tmp[0].length];
-
-		for (  int kk = 0; kk < tmp[0].length; kk++ ) {
-				result[kk * 2] 	= tmp[0][kk];
-				result[kk * 2 + 1] = tmp[1][kk];
-		}
-
-		return result;
-		
-	}
+//	private float[] ds_two(float[][] data) {
+//
+//		float[][] tmp = new float[data.length][data[0].length / 2];
+//		CResampling cr = new CResampling();
+//
+//		tmp[0] = cr.Downsample2fnoLP(data[0], tmp[0].length);
+//		cr.reset();
+//		tmp[1] = cr.Downsample2fnoLP(data[1], tmp[1].length);
+//
+//		// interleave
+//		float[] result = new float[tmp.length * tmp[0].length];
+//
+//		for (  int kk = 0; kk < tmp[0].length; kk++ ) {
+//				result[kk * 2] 	= tmp[0][kk];
+//				result[kk * 2 + 1] = tmp[1][kk];
+//		}
+//
+//		return result;
+//
+//	}
 	
 	
 }

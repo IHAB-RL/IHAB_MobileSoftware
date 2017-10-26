@@ -9,22 +9,20 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
-import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Processing.Preprocessing.CResampling;
 import com.fragtest.android.pa.Processing.Preprocessing.FilterHP;
 
 import org.pmw.tinylog.Logger;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Queue;
 import java.util.Set;
 
 /**
  * BasicProcessingThread.java
  *
- * Loads audio data, applies preprocessing and calls BasicProcessingRunnable.java
+ * Loads audio data, applies preprocessing and calls features using mainRoutine.
  */
 
 public class BasicProcessingThread extends Thread {
@@ -47,15 +45,16 @@ public class BasicProcessingThread extends Thread {
     private Set<String> activeFeatures;
     private int processedFeatures = 0;
 	private ArrayList<String> featureFiles = new ArrayList<String>();
-	
+
+	Queue recordingQueue;
 	
 	// constructor
 	public BasicProcessingThread(Messenger messenger, Queue queue, Bundle settings){
 
         serviceMessenger = messenger;
+		recordingQueue = queue;
 
         samplerate = settings.getInt("samplerate");
-//        chunklengthInS = settings.getInt("chunklengthInS");
         activeFeatures = (Set) settings.getSerializable("activeFeatures");
         filterHp = settings.getBoolean("filterHp");
         filterHpFrequency = settings.getInt("filterHpFrequency");
@@ -70,9 +69,8 @@ public class BasicProcessingThread extends Thread {
 
 	@Override
 	public void run(){
-		audioData = readAllData();	// read audio data from temp or wav file
+		audioData = preprocess();	// read audio data from temp or wav file
 		mainRoutine();				// do processing
-		discardData();
 	}
 
 
@@ -80,52 +78,20 @@ public class BasicProcessingThread extends Thread {
     public void mainRoutine() {}
 
 
-	private void discardData() {
-		buffer = null;
-	}
+	private float[][] preprocess() {
 
+        int frames = buffer.length / 4; // 2 channels, 2 bytes per sample
 
-	// read audio data from file
-	private float[][] readAllData() {
-
-        // skip wave header
-//        int skip = 0;
-//        if (filename.substring(filename.lastIndexOf(".") + 1, filename.length())
-//                .equals(AudioFileIO.CACHE_WAVE)) {
-//            skip = 44;
-//        }
-
-//        try {
-//            // load data from cache
-//            RandomAccessFile inputFile = new RandomAccessFile(filename, "r");
-//            buffer = new byte[(int) inputFile.length() - skip];
-//            inputFile.seek(skip);
-//            inputFile.readFully(buffer);
-//            inputFile.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-        int blocks = buffer.length / 4;
-
-		float[][] audioData = new float[2][blocks];
+		float[][] audioData = new float[2][frames];
 
 		float invMaxShort = 1.0f / Short.MAX_VALUE;
 
 		// convert bytes to short and split channels
-		for ( int kk = 0; kk < (buffer.length/4); kk++ ) {
+		for ( int kk = 0; kk < frames; kk++ ) {
 			audioData[0][kk] = ( (short) ((buffer[kk*4] & 0xFF) | (buffer[kk*4 + 1] << 8)) ) * invMaxShort;
 			audioData[1][kk] = ( (short) ((buffer[kk*4 + 2] & 0xFF) | (buffer[kk*4 + 3] << 8)) ) * invMaxShort;
 		}
 
-		if (filterHp) {
-			// high-pass filter
-			FilterHP hp = new FilterHP(samplerate, filterHpFrequency);
-
-			for (int kk = 0; kk < 2; kk++) {
-				audioData[kk] = hp.filter(audioData[kk]);
-			}
-		}
 
         // downsample audio data
 		if (downsample) {
@@ -134,21 +100,30 @@ public class BasicProcessingThread extends Thread {
 
             samplerate /= 2;
 
-			float[][] audioData_ds = new float[2][blocks/2];
-			
 			CResampling cr = new CResampling();
-			
+
 			for (int kk = 0; kk < 2; kk++) {
-				audioData_ds[kk] = cr.Downsample2f(audioData[kk], audioData_ds[kk].length);
+				cr.Downsample2f(audioData[kk], audioData[kk].length/2);
 				cr.reset();
-			}
+                // resize
+                audioData[kk] = Arrays.copyOf(audioData[kk], frames/2);
+            }
 
 			Log.d(LOG, "Resampling took " + (System.currentTimeMillis() - start) + " ms");
 
-			return audioData_ds;
-		} else {
-			return audioData;
 		}
+
+		if (filterHp) {
+			// high-pass filter
+			FilterHP hp = new FilterHP(samplerate, filterHpFrequency);
+
+			for (int kk = 0; kk < 2; kk++) {
+				hp.filter(audioData[kk]);
+			}
+		}
+
+		return audioData;
+
 	}
 
 

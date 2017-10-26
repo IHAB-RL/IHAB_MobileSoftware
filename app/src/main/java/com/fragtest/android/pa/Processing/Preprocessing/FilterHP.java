@@ -32,10 +32,9 @@ public class FilterHP {
 
     }
 
-	public float[] filter(float[] inbuf) {
+	public void filter(float[] data) {
 
-        int nSamples    = inbuf.length;
-        float[] outbuf  = new float[nSamples];
+        int nSamples    = data.length;
 
         float x0 = 0;
         float x1 = 0;
@@ -49,18 +48,16 @@ public class FilterHP {
 
             x2 = x1;
             x1 = x0;
-            x0 = inbuf[kk];
+            x0 = data[kk];
 
             y0 = b0*x0 + b1*x1 + b2*x2 - a1*y1 - a2*y2;
 
             y2 = y1;
             y1 = y0;
-            outbuf[kk] = y0;
+            data[kk] = y0;
 
 		}
-		
-		return outbuf; 
-		
+
 	}
 
 }

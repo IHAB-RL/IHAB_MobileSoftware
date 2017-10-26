@@ -3,11 +3,11 @@ package com.fragtest.android.pa.Processing.Features;
 import android.os.Messenger;
 import android.util.Log;
 
-import com.fragtest.android.pa.Processing.BasicProcessRunnable;
+import com.fragtest.android.pa.Processing.ProcessingRunnable;
 
 import org.jtransforms.fft.FloatFFT_1D;
 
-public class PSDopt extends BasicProcessRunnable {
+public class PSDopt extends ProcessingRunnable {
 
     public PSDopt(float[][] audioData, int procBlockSize, int nHop, int nOutBlockSize, int nFeatures, Messenger messenger) {
         super(audioData, procBlockSize, nHop, nOutBlockSize, nFeatures, messenger);
