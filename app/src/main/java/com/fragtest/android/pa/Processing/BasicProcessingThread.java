@@ -22,7 +22,7 @@ import java.util.Set;
 /**
  * BasicProcessingThread.java
  *
- * Loads audio data, applies preprocessing and calls features using mainRoutine.
+ * Loads audio data, applies preprocessing and calls features using process.
  */
 
 public class BasicProcessingThread extends Thread {
@@ -39,6 +39,7 @@ public class BasicProcessingThread extends Thread {
 	private boolean filterHp;
     private int filterHpFrequency;
     static int samplerate;
+    static int channels;
 	int chunklengthInS;					// in ms
     private boolean downsample = false;
 
@@ -47,6 +48,9 @@ public class BasicProcessingThread extends Thread {
 	private ArrayList<String> featureFiles = new ArrayList<String>();
 
 	Queue recordingQueue;
+
+    CResampling[] resampler;
+    FilterHP[] highpass;
 	
 	// constructor
 	public BasicProcessingThread(Messenger messenger, Queue queue, Bundle settings){
@@ -60,67 +64,71 @@ public class BasicProcessingThread extends Thread {
         filterHpFrequency = settings.getInt("filterHpFrequency");
         filename = settings.getString("filename");
         downsample = settings.getBoolean("downsample", false);
+        channels = 2;
 
         // extract timestamp from filename
 //        timestamp = filename.substring(filename.lastIndexOf("/")+1);
 //        timestamp = timestamp.substring(0, timestamp.lastIndexOf("."));
+
+        // set up preprocessing (downsampling & filtering)
+        if (downsample) {
+            CResampling[] resampler = new CResampling[channels];
+            for (int i = 0; i < channels; i++) {
+                resampler[i] = new CResampling();
+            }
+        }
+
+        if (filterHp) {
+            FilterHP[] highpass = new FilterHP[channels];
+            for (int i = 0; i < channels; i++) {
+                highpass[i] = new FilterHP(samplerate, filterHpFrequency);
+            }
+        }
+
 	}
 
 
 	@Override
 	public void run(){
-		audioData = preprocess();	// read audio data from temp or wav file
-		mainRoutine();				// do processing
+		audioData = preprocess();
+		process();
 	}
 
 
     // overload in MainProcessingThread
-    public void mainRoutine() {}
+    public void process() {}
 
 
 	private float[][] preprocess() {
 
-        int frames = buffer.length / 4; // 2 channels, 2 bytes per sample
+        int frames = buffer.length / 2; // 2 channels
 
 		float[][] audioData = new float[2][frames];
 
-		float invMaxShort = 1.0f / Short.MAX_VALUE;
-
-		// convert bytes to short and split channels
+		// split channels
 		for ( int kk = 0; kk < frames; kk++ ) {
-			audioData[0][kk] = ( (short) ((buffer[kk*4] & 0xFF) | (buffer[kk*4 + 1] << 8)) ) * invMaxShort;
-			audioData[1][kk] = ( (short) ((buffer[kk*4 + 2] & 0xFF) | (buffer[kk*4 + 3] << 8)) ) * invMaxShort;
+			audioData[0][kk] = buffer[kk*2];
+			audioData[1][kk] = buffer[kk*2 + 1];
 		}
 
-
-        // downsample audio data
+        // downsample audio data and resize array
 		if (downsample) {
-
-			long start = System.currentTimeMillis();
 
             samplerate /= 2;
 
-			CResampling cr = new CResampling();
-
-			for (int kk = 0; kk < 2; kk++) {
-				cr.Downsample2f(audioData[kk], audioData[kk].length/2);
-				cr.reset();
-                // resize
-                audioData[kk] = Arrays.copyOf(audioData[kk], frames/2);
+            for (int i = 0; i< channels; i++) {
+                resampler[i].Downsample2f(audioData[i], frames / 2);
+                audioData[i] = Arrays.copyOf(audioData[i], frames / 2);
             }
-
-			Log.d(LOG, "Resampling took " + (System.currentTimeMillis() - start) + " ms");
-
 		}
 
-		if (filterHp) {
-			// high-pass filter
-			FilterHP hp = new FilterHP(samplerate, filterHpFrequency);
+        // high-pass filter
+        if (filterHp) {
 
-			for (int kk = 0; kk < 2; kk++) {
-				hp.filter(audioData[kk]);
-			}
-		}
+            for (int i = 0; i < channels; i++) {
+                highpass[i].filter(audioData[i]);
+            }
+        }
 
 		return audioData;
 

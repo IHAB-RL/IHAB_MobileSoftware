@@ -12,10 +12,19 @@ public class FilterHP {
     private final float b0;
     private final float b1;
     private final float b2;
+
     private final float a1;
     private final float a2;
 
-	public FilterHP(int fs, int f0) {
+    private float x0;
+    private float x1;
+    private float x2;
+    private float y0;
+    private float y1;
+    private float y2;
+
+
+    public FilterHP(int fs, int f0) {
 
         float w0    = (float) (2.0f * Math.PI * f0 / fs);
         float w0sin = (float) Math.sin(w0);
@@ -30,19 +39,23 @@ public class FilterHP {
         a1       =  -2 * w0cos      / a0;
         a2       =  (1 - alpha)     / a0;
 
+        reset();
+    }
+
+    public void reset() {
+
+        x0 = 0;
+        x1 = 0;
+        x2 = 0;
+
+        y0 = 0;
+        y1 = 0;
+        y2 = 0;
     }
 
 	public void filter(float[] data) {
 
-        int nSamples    = data.length;
-
-        float x0 = 0;
-        float x1 = 0;
-        float x2;
-
-        float y0;
-        float y1 = 0;
-        float y2 = 0;
+        int nSamples = data.length;
 
 		for ( int kk = 0; kk < nSamples; kk++ ) {
 
@@ -55,9 +68,7 @@ public class FilterHP {
             y2 = y1;
             y1 = y0;
             data[kk] = y0;
-
 		}
-
 	}
 
 }

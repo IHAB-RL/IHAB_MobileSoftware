@@ -2,7 +2,6 @@ package com.fragtest.android.pa.Processing;
 
 import android.os.Bundle;
 import android.os.Messenger;
-import android.util.Log;
 
 import com.fragtest.android.pa.Processing.Features.Loop;
 import com.fragtest.android.pa.Processing.Features.PSD;
@@ -12,7 +11,7 @@ import com.fragtest.android.pa.Processing.Features.ZCR;
 import java.util.Queue;
 
 /**
- * MainProcessingThread overloads mainRoutine() in BasicProcessingThread to start runnables
+ * MainProcessingThread overloads process() in BasicProcessingThread to start runnables
  * corresponding to selected features.
  *
  * Implement new features:
@@ -33,8 +32,8 @@ public class MainProcessingThread extends BasicProcessingThread{
 	}
 
 	@Override
-	public void mainRoutine() {
-		super.mainRoutine();
+	public void process() {
+		super.process();
 
 		int nProcSamples, nHop, nFeatures, nProcOutSamples;
 		double nProcSeconds, nOutSeconds;
