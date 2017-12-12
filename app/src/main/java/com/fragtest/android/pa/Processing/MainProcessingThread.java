@@ -25,7 +25,7 @@ import java.util.Queue;
  * 
  * */
 
-public class MainProcessingThread extends BasicProcessingThread{
+public class MainProcessingThread extends BasicProcessingThread {
 
 	public MainProcessingThread(Messenger messenger, Queue queue, Bundle b) {
 		super(messenger, queue, b);
