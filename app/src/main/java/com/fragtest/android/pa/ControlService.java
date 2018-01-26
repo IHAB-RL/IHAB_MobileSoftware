@@ -18,6 +18,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.AcousticFeatureExtraction.StageManager;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
@@ -123,6 +124,7 @@ public class ControlService extends Service {
 
     // Audio recording
     private AudioRecorder audioRecorder;
+    private StageManager stageManager;
 
     // Recording queue to transfer data to the processing thread
     private Queue<Message> recordingQueue = new ConcurrentLinkedQueue<>();
@@ -259,25 +261,30 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_START_RECORDING:
+
+                    stageManager = new StageManager();
+
                     Log.d(LOG, "Start caching audio");
                     Logger.info("Start caching audio");
 
                     // set up recorder
-                    audioRecorder = new AudioRecorder(
-                            serviceMessenger,
-                            recordingQueue,
-                            samplerate);
+//                    audioRecorder = new AudioRecorder(
+//                            serviceMessenger,
+//                            recordingQueue,
+//                            samplerate);
 
                     // set up processing
-                    Bundle settings = getPreferences();
-                    MainProcessingThread processingThread =
-                            new MainProcessingThread(serviceMessenger,
-                                    recordingQueue,
-                                    settings);
+//                    Bundle settings = getPreferences();
+//                    MainProcessingThread processingThread =
+//                            new MainProcessingThread(serviceMessenger,
+//                                    recordingQueue,
+//                                    settings);
+//
+//                    // let's go..
+//                    audioRecorder.start();
+//                    processingThread.start();
 
-                    // let's go..
-                    audioRecorder.start();
-                    processingThread.start();
+                    stageManager.start();
 
                     isRecording = true;
                     isProcessing = true;
@@ -288,13 +295,14 @@ public class ControlService extends Service {
                 case MSG_STOP_RECORDING:
                     Log.d(LOG, "Requesting stop caching audio");
                     Logger.info("Requesting stop caching audio");
-                    audioRecorder.stop();
+//                    audioRecorder.stop();
+                    stageManager.stop();
                     break;
 
                 case MSG_RECORDING_STOPPED:
                     Log.d(LOG, "Stop caching audio");
                     Logger.info("Stop caching audio");
-                    audioRecorder.close();
+//                    audioRecorder.close();
                     isRecording = false;
                     messageClient(MSG_GET_STATUS);
                     break;

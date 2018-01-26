@@ -439,12 +439,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setRecordingVisibility() {
-        if (showRecordingButton) {
+//        if (showRecordingButton) {
             mRecord.setVisibility(View.VISIBLE);
-        } else {
-            mRecord.setVisibility(View.INVISIBLE);
-        }
-        Log.e(LOG, "Recording visibility set to: "+showRecordingButton);
+//        } else {
+//            mRecord.setVisibility(View.INVISIBLE);
+//        }
+//        Log.e(LOG, "Recording visibility set to: "+showRecordingButton);
     }
 
     class MessageHandler extends Handler {
