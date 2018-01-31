@@ -30,15 +30,16 @@ public class AudioRecorder {
     private Thread recordingThread;
     private Queue queue;
     private boolean stopRecording = true;
-    private int chunklengthInBytes, bufferSize;
+    private int chunklengthInBytes, bufferSize, channels;
     private Messenger messenger;
-
 
 
     AudioRecorder(Messenger _messenger, Queue _queue, int _samplerate) {
 
         messenger = _messenger;
         queue = _queue;
+
+        channels = 2;
 
         bufferSize = AudioRecord.getMinBufferSize(_samplerate,
                 AudioFormat.CHANNEL_IN_STEREO,
@@ -93,7 +94,15 @@ public class AudioRecorder {
                 (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING)) {
 
             samples += audioRecord.read(buffer, 0, bufferSize);
-            queue.add(buffer);
+
+            short[][] output = new short[channels][bufferSize / 2];
+
+            for (int i = 0; i < bufferSize/2; i++) {
+                output[0][i] = buffer[i*2];
+                output[1][i] = buffer[i*2+1];
+            }
+
+            queue.add(output);
         }
 
         audioRecord.stop();

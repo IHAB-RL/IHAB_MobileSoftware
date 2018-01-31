@@ -10,20 +10,21 @@ import android.util.Log;
  * Capture audio using Android's AudioRecorder
  */
 
-public class StageProducerAudioCapture extends Stage {
+public class StageAudioCapture extends Stage {
 
     final static String LOG = "StageProducer";
 
     private AudioRecord audioRecord;
-    private int samplerate, bufferSize;
+    private int samplerate, bufferSize, channels;
     private boolean stopRecording = false;
 
-    StageProducerAudioCapture(int nConsumer, int id) {
+    StageAudioCapture(int nConsumer, int id) {
         super(null, nConsumer, id);
 
-        Log.d(LOG, "Setting up producer");
+        Log.d(LOG, "Setting up audioCapture");
 
         samplerate = 16000;
+        channels = 2;
 
         bufferSize = AudioRecord.getMinBufferSize(samplerate,
                 AudioFormat.CHANNEL_IN_STEREO,
@@ -52,15 +53,14 @@ public class StageProducerAudioCapture extends Stage {
 
         while (!stopRecording & !Thread.currentThread().isInterrupted()) {
 
-            Log.d(LOG, "Flag: " + stopRecording );
-
-            float[] data = new float[bufferSize];
+            float[][] data = new float[channels][bufferSize / channels];
 
             samples += audioRecord.read(buffer, 0, bufferSize);
 
-            // cast audio buffer to float
-            for (int i = 0; i < buffer.length; i++) {
-                data[i] = (float) buffer[i];
+            // split channels
+            for (int i = 0; i < data[0].length; i++) {
+                data[0][i] = buffer[i * 2];
+                data[1][i] = buffer[i * 2 + 1];
             }
 
             send(data);

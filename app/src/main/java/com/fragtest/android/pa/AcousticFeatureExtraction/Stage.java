@@ -1,8 +1,6 @@
 package com.fragtest.android.pa.AcousticFeatureExtraction;
 
 import android.util.Log;
-
-import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -13,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 abstract class Stage {
 
     private Thread thread;
-    private LinkedBlockingQueue<float[]> inQueue;
+    private LinkedBlockingQueue<float[][]> inQueue;
     private LinkedBlockingQueue[] outQueue;
     int nConsumer, id;
 
@@ -66,9 +64,10 @@ abstract class Stage {
     }
 
 
-    public float[] receive() {
+    public float[][] receive() {
 
         try {
+            Log.d("Stage", "Elements in inQueue " + id + ": " + inQueue.size());
             return inQueue.take();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -78,10 +77,11 @@ abstract class Stage {
     }
 
 
-    public void send(float[] data) {
+    public void send(float[][] data) {
 
         try {
             for (int i = 0; i < outQueue.length; i++) {
+                Log.d("Stage", "Elements in outQueue " + id + ":" + i + ": " + outQueue[i].size());
                 outQueue[i].put(data);
             }
         } catch (InterruptedException e) {
