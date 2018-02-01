@@ -13,6 +13,7 @@ public class Answer {
     private boolean isDefault = false;
     private String LOG_STRING = "Answer";
     private boolean isDebug = false;
+    private boolean isExclusive = false;
 
     public Answer(String sAnswer, int nAnswerId, int nGroup) {
         Text = sAnswer;
@@ -26,21 +27,25 @@ public class Answer {
         }
     }
 
-    public Answer(String sAnswer, int nAnswerId, int nGroup, boolean bDefault) {
+    public Answer(String sAnswer, int nAnswerId, int nGroup, boolean bDefault, boolean bExclusive) {
         Text = sAnswer;
         Text = Text.replaceAll("&lt;", "<");
         Text = Text.replaceAll("&gt;", ">");
         Id = nAnswerId;
         Group = nGroup;
         isDefault = bDefault;
+        isExclusive = bExclusive;
 
         if (isDebug) {
             Log.i(LOG_STRING, "Answer added - Text: " + Text + ", Id: " +
-                    Id + ", Group: " + nGroup + ", Default: " + isDefault);
+                    Id + ", Group: " + nGroup + ", Default: " + isDefault +
+                    ", Exclusive: "+isExclusive);
         }
     }
 
     public boolean isDefault() {
         return isDefault;
     }
+
+    public boolean isExclusive() { return isExclusive; }
 }

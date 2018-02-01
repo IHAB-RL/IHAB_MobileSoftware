@@ -32,6 +32,7 @@ public class AnswerTypePhotograph extends AppCompatActivity{
     private Units mUnits;
     private int mId, mUsableHeight;
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    private boolean isImmersive = false;
     PackageManager pm;
 
     //TODO:  check camera availability up front
@@ -40,7 +41,7 @@ public class AnswerTypePhotograph extends AppCompatActivity{
         mContext = context;
         mParent = parent;
         mUnits = new Units(mContext);
-        mUsableHeight = mUnits.getUsableSliderHeight();
+        mUsableHeight = mUnits.getUsableSliderHeight(isImmersive);
 
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);

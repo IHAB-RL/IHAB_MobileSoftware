@@ -41,18 +41,20 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     private final int mQuestionId;
     private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
+    private boolean isImmersive = false;
 
     // These serve to normalise pixel/value for now
     private int mMagicNumber1 = 140;
     private int mMagicNumber2 = 151;
 
-    public AnswerTypeSliderFix(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
+    public AnswerTypeSliderFix(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId, boolean immersive) {
 
         mContext = context;
         parent = qParent;
         mQuestionnaire = questionnaire;
         mListOfAnswers = new ArrayList<>();
         mQuestionId = nQuestionId;
+        isImmersive = immersive;
 
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -64,7 +66,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 1.f
         ));
 
-        mUsableHeight = (new Units(mContext)).getUsableSliderHeight();
+        mUsableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive);
 
         //  |           mHorizontalContainer          |
         //  | mSliderContainer | mAnswerListContainer |

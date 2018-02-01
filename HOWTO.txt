@@ -1,0 +1,22 @@
+If you're root on your device, you can follow this method to become device owner.
+
+First, create a file device_owner.xml with following content:
+
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<device-owner package="your.owner.app.package.id" name="Your app name" />
+
+Now do the following steps
+
+    adb push device_owner.xml /sdcard/
+
+    adb shell
+
+    su
+
+    cp /sdcard/device_owner.xml /data/system/
+
+    cd /data/system/
+
+    chown system:system device_owner.xml
+
+    reboot

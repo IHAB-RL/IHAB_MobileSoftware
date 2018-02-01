@@ -11,8 +11,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/toolBarHeightWithPadding"
-        android:orientation="horizontal"
         android:background="@color/lighterGray"
+        android:orientation="horizontal"
         android:padding="@dimen/toolBarPadding">
 
         <TextView
@@ -39,9 +39,9 @@
             android:layout_width="32dp"
             android:layout_height="@dimen/toolbarHeight"
             android:layout_weight="0"
-            android:visibility="invisible"
             android:background="@android:drawable/ic_btn_speak_now"
-            android:backgroundTint="@android:color/darker_gray">
+            android:backgroundTint="@android:color/darker_gray"
+            android:visibility="invisible">
 
         </View>
 
@@ -54,11 +54,10 @@
             android:id="@+id/Action_Back"
             android:layout_width="32dp"
             android:layout_height="@dimen/toolbarHeight"
-            android:background="@drawable/ic_arrow_back_black_24dp"
-            android:layout_weight="0"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            >
+            android:layout_weight="0"
+            android:background="@drawable/ic_arrow_back_black_24dp">
 
         </View>
 
@@ -67,27 +66,92 @@
             android:id="@+id/Action_Forward"
             android:layout_width="32dp"
             android:layout_height="@dimen/toolbarHeight"
-            android:background="@drawable/ic_arrow_forward_black_24dp"
-            android:layout_weight="0"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            >
-        </View>
+            android:layout_weight="0"
+            android:background="@drawable/ic_arrow_forward_black_24dp"></View>
+
         <View
             android:id="@+id/Action_Revert"
             android:layout_width="32dp"
             android:layout_height="@dimen/toolbarHeight"
-            android:background="@drawable/ic_refresh_black_24dp"
-            android:layout_weight="0"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            >
+            android:layout_weight="0"
+            android:background="@drawable/ic_refresh_black_24dp" />
 
-        </View>
+
+        <RelativeLayout
+            android:layout_width="12dp"
+            android:layout_height="24dp"
+            android:layout_marginBottom="@dimen/battery_margin_top"
+            android:layout_marginTop="@dimen/battery_margin_bottom">
+
+            <LinearLayout
+                android:layout_width="@dimen/batteryWidth"
+                android:layout_height="@dimen/batteryHeight"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0"
+                android:orientation="vertical">
+
+                <View
+                    android:id="@+id/battery_top"
+                    android:layout_width="10dp"
+                    android:layout_height="0dp"
+                    android:layout_marginLeft="@dimen/battery_margin_left"
+                    android:layout_marginRight="@dimen/battery_margin_right"
+                    android:layout_weight="0.03" />
+
+                <View
+                    android:id="@+id/battery_reg"
+                    android:layout_width="9dp"
+                    android:layout_height="0dp"
+                    android:layout_marginLeft="@dimen/battery_margin_left"
+                    android:layout_marginRight="@dimen/battery_margin_right"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_weight="0.47"
+                    android:background="@color/BackgroundColor" />
+
+                <View
+                    android:id="@+id/battery_prog"
+                    android:layout_width="9dp"
+                    android:layout_height="0dp"
+                    android:layout_marginLeft="@dimen/battery_margin_left"
+                    android:layout_marginRight="@dimen/battery_margin_right"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_weight="0.47"
+                    android:background="@color/JadeRed" />
+
+                <View
+                    android:id="@+id/battery_bottom"
+                    android:layout_width="10dp"
+                    android:layout_height="0dp"
+                    android:layout_marginLeft="@dimen/battery_margin_left"
+                    android:layout_marginRight="@dimen/battery_margin_right"
+                    android:layout_weight="0.03"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/battery" />
+
+            <View
+                android:id="@+id/charging"
+                android:scaleX="-1"
+                android:layout_width="@dimen/charging_width"
+                android:layout_height="@dimen/charging_height"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/charging_margin_top"
+                android:layout_marginBottom="@dimen/charging_margin_bottom"
+                android:layout_marginLeft="@dimen/charging_margin_left"
+                android:layout_marginRight="@dimen/charging_margin_right"
+                android:background="@drawable/charging"/>
+        </RelativeLayout>
 
     </LinearLayout>
 
-    <!-- "Progress Bar" -->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/progressBarHeight"
@@ -111,14 +175,16 @@
 
     </LinearLayout>
 
+    <!-- "Progress Bar" -->
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_gravity="top">
+        android:layout_gravity="top"
+        android:layout_weight="1">
 
     </android.support.v4.view.ViewPager>
+
 
     <View
         android:id="@+id/Action_Config"

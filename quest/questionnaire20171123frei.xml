@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mobiquest>// First 2 entries must be the following class
+
+    /*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
+    <timer mean="1800" deviation="300"></timer>
+
+    <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
+        <title>
+            <text>Hörsituation_frei</text>
+        </title>
+		
+		//Intro
+        <question
+            hidden="true"
+            id="10001"
+            mandatory="true"
+            type="text">
+            <label>
+                <text>Device ID</text>
+            </label>
+            <default>
+                <text>$device.id</text>
+            </default>
+        </question>
+
+        <question
+            hidden="true"
+            id="10002"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>Start Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+
+        <question
+            hidden="true"
+            id="10003"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>Start Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+
+		//1)
+		<question
+			id="10101"
+			type="radio">
+			<label>
+				<text>Wie viele Minuten liegt das Ereignis zurück?</text>
+			</label>
+			<option id="10101_01">
+				<text>Jetzt</text>
+			</option>
+			<option id="10101_02">
+				<text>&lt;2-3</text>
+			</option>
+			<option id="10101_03">
+				<text>&lt;5</text>
+			</option>
+			<option id="10101_04">
+				<text>&lt;10</text>
+			</option>
+			<option id="10101_05">
+				<text>&lt;15</text>
+			</option>
+			<option id="10101_06">
+				<text>&lt;20</text>
+			</option>
+			<option id="10101_07">
+				<text>&lt;30</text>
+			</option>
+		</question>
+
+		//2)
+		<question
+			id="10102"
+			type="emoji">
+			<label>
+				<text>Wie ist Ihre momentane Stimmung?</text>
+			</label>
+			<option id="10102_01">
+                <text>emoji_happy2</text>
+            </option>
+            <option id="10102_02">
+                <text>emoji_happy1</text>
+            </option>
+            <option id="10102_03">
+                <text>emoji_neutral</text>
+            </option>
+            <option id="10102_04">
+                <text>emoji_sad1</text>
+            </option>
+            <option id="10102_05">
+                <text>emoji_sad2</text>
+            </option>
+		</question>
+
+		//3)
+		<question id="10103" type="radio">
+            <label>
+                <text>Welche Situation trifft zu?</text>
+            </label>
+            <option id="10103_01">
+                <text>Zu Hause</text>
+            </option>
+            <option id="10103_02">
+                <text>Unterwegs</text>
+            </option>
+            <option id="10103_03">
+                <text>Gesellschaft und Erledingungen</text>
+            </option>
+            <option id="10103_04">
+                <text>Beruf</text>
+            </option>
+            <option id="10103_05">
+                <text>Keine Situation trifft zu</text>
+            </option>
+        </question>
+
+		//4A)
+		<question id="10104" type="radio" filter="10103_01">
+            <label>
+                <text>Zu Hause - und zwar:</text>
+            </label>
+            <option id="10104_01">
+                <text>Ausruhen</text>
+            </option>
+            <option id="10104_02">
+                <text>Essen</text>
+            </option>
+            <option id="10104_03">
+                <text>Küchenarbeit</text>
+            </option>
+            <option id="10104_04">
+                <text>Lesen/Computer</text>
+            </option>
+            <option id="10104_05">
+                <text>Musik hören</text>
+            </option>
+			<option id="10104_06">
+                <text>Hausarbeit sonst</text>
+            </option>
+			<option id="10104_07">
+                <text>Draußen: Garten/Balkon</text>
+            </option>
+			<option id="10104_08">
+                <text>Sonstiges</text>
+            </option>
+        </question>
+
+		//4B)
+		<question id="10105" type="radio" filter="10103_02">
+            <label>
+                <text>Unterwegs - und zwar:</text>
+            </label>
+            <option id="10105_01">
+                <text>Auto selbst fahren</text>
+            </option>
+            <option id="10105_02">
+                <text>Auto mitfahren</text>
+            </option>
+            <option id="10105_03">
+                <text>Bus</text>
+            </option>
+            <option id="10105_04">
+                <text>Bahn</text>
+            </option>
+            <option id="10105_05">
+                <text>zu Fuß</text>
+            </option>
+			<option id="10105_06">
+                <text>Fahrrad</text>
+            </option>
+        </question>
+
+		//4C)
+		<question id="10106" type="radio" filter="10103_03">
+            <label>
+                <text>Gesellschaft und Erledigungen - und zwar:</text>
+            </label>
+            <option id="10106_01">
+                <text>Jemanden besuchen</text>
+            </option>
+            <option id="10106_02">
+                <text>Feier</text>
+            </option>
+            <option id="10106_03">
+                <text>Restaurant/Café</text>
+            </option>
+            <option id="10106_04">
+                <text>Theater/Kirche/Vortrag</text>
+            </option>
+            <option id="10106_05">
+                <text>Versammlung</text>
+            </option>
+			<option id="10106_06">
+                <text>Behörde/Praxis</text>
+            </option>
+			<option id="10106_07">
+                <text>Geschäft/Einkaufen</text>
+            </option>
+			<option id="10106_08">
+				<text>Sonstiges</text>
+			</option>
+        </question>
+		
+		//4D)
+		<question id="10107" type="radio" filter="10103_04">
+            <label>
+                <text>Beruf - und zwar:</text>
+            </label>
+            <option id="10107_01">
+                <text>Büro</text>
+            </option>
+            <option id="10107_02">
+                <text>Werkstatt</text>
+            </option>
+            <option id="10107_03">
+                <text>Schalter/Tresen</text>
+            </option>
+            <option id="10107_04">
+                <text>Besprechungsraum</text>
+            </option>
+            <option id="10107_05">
+                <text>Draußen</text>
+            </option>
+			<option id="10107_06">
+                <text>Kantine/Teeküche</text>
+            </option>
+			<option id="10107_07">
+                <text>Sonstiges</text>
+            </option>
+        </question>
+		
+		//4E)
+		<question id="10108" type="text" filter="10103_05">
+            <label>
+                <text>Bitte beschreiben Sie die Situation.</text>
+            </label>
+        </question>
+
+		//5) Wenn 4A)
+		<question id="10109" type="checkbox" filter="10103_01">
+            <label>
+                <text>Von wem oder was kommt Schall?</text>
+            </label>
+            <option id="10109_01" group="1">
+                <text>1 anwesende Person</text>
+            </option>
+            <option id="10109_02" group="1">
+                <text>2-3 anwesende Personen</text>
+            </option>
+            <option id="10109_03" group="1">
+                <text>4 und mehr Personen</text>
+            </option>
+            <option id="10109_04">
+                <text>TV</text>
+            </option>
+            <option id="10109_05">
+                <text>Telefon</text>
+            </option>
+			<option id="10109_06">
+                <text>Radio, Musikanlage</text>
+            </option>
+			<option id="10109_07">
+                <text>Geräte, Geschirr</text>
+            </option>
+			<option id="10109_08">
+				<text>Sonstiges</text>
+			</option>
+			<option id="10109_09" condition="exclusive">
+                <text>Es ist ruhig</text>
+            </option>
+        </question>
+
+		//6) Wenn 4A) alles außer "es ist ruhig" 
+		<question id="10110" type="radio" filter="10103_01,!10109_09">
+            <label>
+                <text>Wem oder was hören Sie hauptsächlich zu?</text>
+            </label>
+            <option id="10110_01">
+                <text>Einer Person</text>
+            </option>
+            <option id="10110_02">
+                <text>Mehreren Personen</text>
+            </option>
+            <option id="10110_03">
+                <text>TV/Radio: nur Sprache</text>
+            </option>
+            <option id="10110_04">
+                <text>TV: Film, Serie</text>
+            </option>
+            <option id="10110_05">
+                <text>Festnetztelefon</text>
+            </option>
+			<option id="10110_06">
+                <text>Handy</text>
+            </option>
+			<option id="10110_07">
+                <text>Musik</text>
+            </option>
+			<option id="10110_08">
+				<text>Geräte, Geschirr</text>
+			</option>
+			<option id="10110_09">
+				<text>Niemandem und nichts</text>
+			</option>
+        </question>
+
+		//5) Wenn 4B)
+		<question id="10111" type="checkbox" filter="10103_02,10103_05">
+            <label>
+                <text>Von wem oder was kommt Schall?</text>
+            </label>
+            <option id="10111_01" group="1">
+                <text>1 anwesende Person</text>
+            </option>
+            <option id="10111_02" group="1">
+                <text>2-3 anwesende Personen</text>
+            </option>
+            <option id="10111_03" group="1">
+                <text>4 und mehr Personen</text>
+            </option>
+            <option id="10111_04">
+                <text>Telefon</text>
+            </option>
+            <option id="10111_05">
+                <text>Öffentlicher Lautsprecher</text>
+            </option>
+			<option id="10111_06">
+                <text>Radio, Musikanlage</text>
+            </option>
+			<option id="10111_07">
+                <text>Motorengeräusche</text>
+            </option>
+			<option id="10111_08">
+				<text>Sonstiges</text>
+			</option>
+			<option id="10111_09" condition="exclusive">
+                <text>Es ist ruhig</text>
+            </option>
+        </question>
+		
+		//6) Wenn 4B) alles außer "es ist ruhig":
+		<question id="10112" type="radio" filter="10103_02,10103_05,!10111_09">
+            <label>
+                <text>Wem oder was hören Sie hauptsächlich zu?</text>
+            </label>
+            <option id="10112_01">
+                <text>Einer Person</text>
+            </option>
+            <option id="10112_02">
+                <text>Mehreren Personen</text>
+            </option>
+            <option id="10112_03">
+                <text>Festnetztelefon</text>
+            </option>
+            <option id="10112_04">
+                <text>Handy</text>
+            </option>
+            <option id="10112_05">
+                <text>Lautsprecheransagen</text>
+            </option>
+			<option id="10112_06">
+                <text>Radiosprecher/in</text>
+            </option>
+			<option id="10112_07">
+                <text>Musik</text>
+            </option>
+			<option id="10112_08">
+                <text>niemandem und nichts</text>
+            </option>
+        </question>
+		
+		//5) Von 4C) verzweigen
+		<question id="10113" type="checkbox" filter="10103_03">
+            <label>
+                <text>Von wem oder was kommt Schall?</text>
+            </label>
+            <option id="10113_01" group="1">
+                <text>1 anwesende Person</text>
+            </option>
+            <option id="10113_02" group="1">
+                <text>2-3 anwesende Personen</text>
+            </option>
+            <option id="10113_03" group="1">
+                <text>4 und mehr Personen</text>
+            </option>
+            <option id="10113_04">
+                <text>Telefon</text>
+            </option>
+            <option id="10113_05">
+                <text>Radio, Musikanlage, Live</text>
+            </option>
+			<option id="10113_06">
+                <text>Geräte, Geschirr</text>
+            </option>
+			<option id="10113_07">
+				<text>Sonstiges</text>
+			</option>
+			<option id="10113_08" condition="exclusive">
+                <text>Es ist ruhig</text>
+            </option>
+        </question>
+		
+		//6) Wenn 4C) alles außer "Es ist ruhig":
+		<question id="10114" type="radio" filter="10103_03,!10113_08">
+            <label>
+                <text>Wem oder was hören Sie hauptsächlich zu?</text>
+            </label>
+            <option id="10114_01">
+                <text>Einer Person direkt</text>
+            </option>
+            <option id="10114_02">
+                <text>Einer Person über Lautsprecher</text>
+            </option>
+            <option id="10114_03">
+                <text>Mehreren Personen</text>
+            </option>
+            <option id="10114_04">
+                <text>Festnetztelefon</text>
+            </option>
+            <option id="10114_05">
+                <text>Handy</text>
+            </option>
+			<option id="10114_06">
+                <text>Musik</text>
+            </option>
+			<option id="10114_07">
+                <text>niemandem und nichts</text>
+            </option>
+        </question>
+		
+		//5) Von 4D) verzweigen
+		<question id="10115" type="checkbox" filter="10103_04">
+            <label>
+                <text>Von wem oder was kommt Schall?</text>
+            </label>
+            <option id="10115_01" group="1">
+                <text>1 anwesende Person</text>
+            </option>
+            <option id="10115_02" group="1">
+                <text>2-3 anwesende Personen</text>
+            </option>
+            <option id="10115_03" group="1">
+                <text>4 und mehr Personen</text>
+            </option>
+            <option id="10115_04">
+                <text>Telefon</text>
+            </option>
+            <option id="10115_05">
+                <text>Öffentlicher Lautsprecher</text>
+            </option>
+			<option id="10115_06">
+                <text>Radio, Musikanlage</text>
+            </option>
+			<option id="10115_07">
+                <text>Geräte, Geschirr</text>
+            </option>
+			<option id="10115_08">
+				<text>Sonstiges</text>
+			</option>
+			<option id="10115_09" condition="exclusive">
+                <text>Es ist ruhig</text>
+            </option>
+        </question>
+		
+		//6) Wenn 4D) alles außer "Es ist ruhig":
+		<question id="10116" type="radio" filter="10103_04,!10115_09">
+            <label>
+                <text>Wem oder was hören Sie hauptsächlich zu?</text>
+            </label>
+            <option id="10116_01">
+                <text>Einer Person</text>
+            </option>
+            <option id="10116_02">
+                <text>Mehreren Personen</text>
+            </option>
+            <option id="10116_03">
+                <text>Festnetztelefon</text>
+            </option>
+            <option id="10116_04">
+                <text>Handy</text>
+            </option>
+			<option id="10116_05">
+                <text>Lautsprecheransagen</text>
+            </option>
+			<option id="10116_06">
+                <text>Radiosprecher/in</text>
+            </option>
+			<option id="10116_07">
+                <text>Musik</text>
+            </option>
+			<option id="10116_08">
+                <text>niemandem und nichts</text>
+            </option>
+        </question>
+		
+		//7) Situationsübergreifend: Wenn 4A) "Draußen" oder 4B) oder 4C) "Geschäft/Einkaufen" oder 4D) "Draußen": (?)
+		<question id="10117" type="radio" filter="!10109_09,!10111_09,!10113_08,!10115_09">
+            <label>
+                <text>Wie gut hören Sie, woher einzelne Geräusche kommen?</text>
+            </label>
+            <option id="10117_01">
+                <text>Perfekt</text>
+            </option>
+            <option id="10117_02">
+                <text>Sehr gut</text>
+            </option>
+            <option id="10117_03">
+                <text>Eher gut</text>
+            </option>
+            <option id="10117_04">
+                <text>Mittel</text>
+            </option>
+			<option id="10117_05">
+                <text>Eher schlecht</text>
+            </option>
+			<option id="10117_06">
+                <text>Sehr schlecht</text>
+            </option>
+			<option id="10117_07">
+                <text>Gar nicht</text>
+            </option>
+        </question>
+
+		//8) Für alle Situationen:
+		<question id="10118" type="radio">
+            <label>
+                <text>Wie wichtig ist es, in der Situation gut zu hören?</text>
+            </label>
+            <option id="10118_01">
+                <text>Sehr wichtig</text>
+            </option>
+            <option id="10118_02">
+                <text>Wichtig</text>
+            </option>
+            <option id="10118_03">
+                <text>Eher wichtig</text>
+            </option>
+            <option id="10118_04">
+                <text>Teils-teils</text>
+            </option>
+			<option id="10118_05">
+                <text>Eher unwichtig</text>
+            </option>
+			<option id="10118_06">
+                <text>Unwichtig</text>
+            </option>
+			<option id="10118_07">
+                <text>Völlig unwichtig</text>
+            </option>
+        </question>
+		
+		//9) Wenn bei 6) , NOT: "niemandem und nichts", "es ist ruhig" 
+		<question id="10119" type="radio" filter="!10109_09,!10111_09,!10113_08,!10115_09,!10110_09,!10112_08,!10114_07,!10116_08">
+            <label>
+                <text>Wie anstrengend ist es zuzuhören?</text>
+            </label>
+            <option id="10119_01">
+                <text>Extrem anstrengend</text>
+            </option>
+            <option id="10119_02">
+                <text>Sehr anstrengend</text>
+            </option>
+            <option id="10119_03">
+                <text>Deutlich anstrengend</text>
+            </option>
+            <option id="10119_04">
+                <text>Mittelgradig</text>
+            </option>
+			<option id="10119_05">
+                <text>Wenig anstrengend</text>
+            </option>
+			<option id="10119_06">
+                <text>Sehr wenig anstrengend</text>
+            </option>
+			<option id="10119_07">
+                <text>Mühelos</text>
+            </option>
+        </question>
+		
+		//10) 
+		<question id="10120" type="radio" filter="!10109_09,!10111_09,!10113_08,!10115_09">
+            <label>
+                <text>Wie laut ist es?</text>
+            </label>
+            <option id="10120_01">
+                <text>Zu laut</text>
+            </option>
+            <option id="10120_02">
+                <text>Sehr laut</text>
+            </option>
+            <option id="10120_03">
+                <text>Laut</text>
+            </option>
+            <option id="10120_04">
+                <text>Mittel</text>
+            </option>
+			<option id="10120_05">
+                <text>Leise</text>
+            </option>
+			<option id="10120_06">
+                <text>Sehr leise</text>
+            </option>
+			<option id="10120_07">
+                <text>Zu leise</text>
+            </option>
+        </question>
+		
+		//11)
+		<question id="10121" type="radio" filter="!10109_09,!10111_09,!10113_08,!10115_09">
+            <label>
+                <text>Wie angenehm sind die Geräusche/Klänge?</text>
+            </label>
+            <option id="10121_01">
+                <text>Sehr angenehm</text>
+            </option>
+            <option id="10121_02">
+                <text>Angenehm</text>
+            </option>
+            <option id="10121_03">
+                <text>Eher angenehm</text>
+            </option>
+            <option id="10121_04">
+                <text>Neutral</text>
+            </option>
+			<option id="10121_05">
+                <text>Eher unangenehm</text>
+            </option>
+			<option id="10121_06">
+                <text>Unangenehm</text>
+            </option>
+			<option id="10121_07">
+                <text>Sehr unangenehm</text>
+            </option>
+        </question>
+		
+		//12) Wenn bei 6) , NOT: "niemandem und nichts", "es ist ruhig" 
+		<question id="10122" type="radio" filter="!10109_09,!10111_09,!10113_08,!10115_09,!10110_09,!10112_08,!10114_07,!10116_08">
+            <label>
+                <text>Wie gut oder schlecht verstehen Sie?</text>
+            </label>
+            <option id="10122_01">
+                <text>Perfekt</text>
+            </option>
+            <option id="10122_02">
+                <text>Sehr gut</text>
+            </option>
+            <option id="10122_03">
+                <text>Eher gut</text>
+            </option>
+            <option id="10122_04">
+                <text>Mittel</text>
+            </option>
+			<option id="10122_05">
+                <text>Eher schlecht</text>
+            </option>
+			<option id="10122_06">
+                <text>Sehr schlecht</text>
+            </option>
+			<option id="10122_07">
+                <text>Gar nichts</text>
+            </option>
+        </question>
+		
+		//13) Wenn bei 6) NOT: "niemandem und nichts", "es ist ruhig" 
+		<question id="10123" type="radio" filter="!10109_09,!10111_09,!10113_08,!10115_09,!10110_09,!10112_08,!10114_07,!10116_08">
+            <label>
+                <text>Sind Ihnen die Stimmen vertraut?</text>
+            </label>
+            <option id="10123_01">
+                <text>Vertraut</text>
+            </option>
+            <option id="10123_02">
+                <text>Nicht vertraut</text>
+            </option>
+            <option id="10123_03">
+                <text>Beides</text>
+            </option>
+        </question>
+		
+		//14) Wenn bei 6) "Mehreren Personen gleichzeitig" (funktioniert noch nicht)
+		<question id="10124" type="radio" filter="!10109_09,!10111_09,!10113_08,!10115_09,
+			!10110_01,!10110_03,!10110_04,!10110_05,!10110_06,!10110_07,!10110_08,!10110_09,
+			!10112_01,!10112_03,!10112_04,!10112_05,!10112_06,!10112_07,!10112_08,
+			!10114_01,!10114_02,!10114_04,!10114_05,!10114_06,!10114_07,
+			!10116_01,!10116_03,!10116_04,!10116_05,!10116_06,!10116_07,!10116_08">
+            <label>
+                <text>Fühlen Sie sich mitten in der Gesprächssituation?</text>
+            </label>
+            <option id="10124_01">
+                <text>Bin mittendrin</text>
+            </option>
+            <option id="10124_02">
+                <text>Bin eher mittendrin</text>
+            </option>
+            <option id="10124_03">
+                <text>Bin mal mittendrin, mal außen vor</text>
+            </option>
+            <option id="10124_04">
+                <text>Bin eher außen vor</text>
+            </option>
+			<option id="10124_05">
+                <text>Bin außen vor</text>
+            </option>
+        </question>
+		
+		//15) Wenn bei 5) eine oder mehrere Personen anwesend und NICHT "Nichts und niemandem": 
+		<question id="10125" type="radio" filter="!10109_09,!10110_09,!10111_09,!10112_08,!10113_08,!10114_07,!10115_09,!10116_08">
+            <label>
+                <text>Wie sehr sind andere Menschen durch Ihr Hörproblem belästigt?</text>
+            </label>
+            <option id="10125_01">
+                <text>Extrem belästigt</text>
+            </option>
+            <option id="10125_02">
+                <text>Sehr</text>
+            </option>
+            <option id="10125_03">
+                <text>Ziemlich</text>
+            </option>
+            <option id="10125_04">
+                <text>Mittel</text>
+            </option>
+			<option id="10125_05">
+                <text>Wenig</text>
+            </option>
+			<option id="10125_06">
+                <text>Sehr wenig</text>
+            </option>
+			<option id="10125_07">
+                <text>Gar nicht belästigt</text>
+            </option>
+        </question>
+
+		//16)
+		<question id="10126" type="radio">
+            <label>
+                <text>Wie sehr fühlen Sie sich beeinträchtigt?</text>
+            </label>
+            <option id="10126_01">
+                <text>Extrem beeinträchtigt</text>
+            </option>
+            <option id="10126_02">
+                <text>Sehr</text>
+            </option>
+            <option id="10126_03">
+                <text>Ziemlich</text>
+            </option>
+            <option id="10126_04">
+                <text>Mittel</text>
+            </option>
+			<option id="10126_05">
+                <text>Wenig</text>
+            </option>
+			<option id="10126_06">
+                <text>Sehr wenig</text>
+            </option>
+			<option id="10126_07">
+                <text>Gar nicht beeinträchtigt</text>
+            </option>
+        </question>
+
+		//Outro
+        <question
+            hidden="true"
+            id="11001"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>End Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+        <question
+            hidden="true"
+            id="11002"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>End Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+        <finish>
+            <text>Vielen Dank!</text>
+        </finish>
+    </survey>
+</mobiquest>

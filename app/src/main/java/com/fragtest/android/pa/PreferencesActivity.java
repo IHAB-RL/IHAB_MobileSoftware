@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.SwitchPreference;
 
 import com.fragtest.android.pa.Core.FileIO;
 
@@ -35,13 +34,7 @@ public class PreferencesActivity extends PreferenceActivity {
 
             // Load preference from XMl resource
             addPreferencesFromResource(preferences);
-            // For some reason this needs to be set manually - only shown when is not checked anyway
-            SwitchPreference switchPreference = (SwitchPreference) findPreference("isLocked");
-            switchPreference.setChecked(false);
-
             includeQuestList();
-
-
         }
 
 
@@ -51,14 +44,12 @@ public class PreferencesActivity extends PreferenceActivity {
             String[] fileList = fileIO.scanQuestOptions();
 
             ListPreference listPreferenceQuest = (ListPreference) findPreference("whichQuest");
+            // TODO: Isn't the second constraint enough?
             if ((fileList != null) && (fileList.length>0)) {
                 // Fill in menu contents
                 listPreferenceQuest.setEntries(fileList);
                 listPreferenceQuest.setEntryValues(fileList);
                 listPreferenceQuest.setDefaultValue(fileList[0]);
-                //if (listPreferenceQuest.getSummary() == "") {
-                //    listPreferenceQuest.setSummary(fileList[0]);
-                //}
             } else {
                 listPreferenceQuest.setSummary(R.string.noQuestionnaires);
                 listPreferenceQuest.setSelectable(false);

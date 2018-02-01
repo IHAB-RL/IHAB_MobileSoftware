@@ -20,12 +20,12 @@ import java.util.TimeZone;
 
 public class MetaData extends AppCompatActivity {
 
-    private static String LOG_STRING = "MetaData";
+    private static String LOG = "MetaData";
 
     private String DEVICE_Id, START_DATE, START_DATE_UTC, END_DATE,
             END_DATE_UTC, KEY_HEAD, KEY_FOOT, KEY_TAG_CLOSE, KEY_VALUE_OPEN, KEY_VALUE_CLOSE,
             KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA,
-            KEY_QUESTID, mRawInput, FILE_NAME, KEY_MOTIVATION;
+            KEY_QUESTID, mRawInput, FILE_NAME, KEY_MOTIVATION, KEY_NEW_LINE, KEY_SHORT_CLOSE;
 
     private SimpleDateFormat DATE_FORMAT;
 
@@ -52,6 +52,8 @@ public class MetaData extends AppCompatActivity {
         KEY_TAG_CLOSE = ">";
         KEY_VALUE_OPEN = "<value ";
         KEY_VALUE_CLOSE = "</value>";
+        KEY_NEW_LINE = "\n";
+        KEY_SHORT_CLOSE = "/>";
     }
 
     public boolean initialise() {
@@ -66,7 +68,7 @@ public class MetaData extends AppCompatActivity {
         FILE_NAME = generateFileName();
 
         if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Object initialised");
+            Log.i(LOG, "Object initialised");
         }
         return true;
     }
@@ -81,7 +83,7 @@ public class MetaData extends AppCompatActivity {
         collectData();
 
         if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Object finalised");
+            Log.i(LOG, "Object finalised");
         }
         return true;
     }
@@ -95,8 +97,11 @@ public class MetaData extends AppCompatActivity {
 
         int questionId = -255;
 
+        /* Information about Questionnaire */
         KEY_DATA = KEY_HEAD;
+        KEY_DATA += KEY_NEW_LINE;
         KEY_DATA += KEY_MOTIVATION;
+        KEY_DATA += KEY_NEW_LINE;
         KEY_DATA += KEY_RECORD_OPEN;
         KEY_DATA += " uri=\"";
         KEY_DATA += KEY_SURVEY_URI.substring(0, KEY_SURVEY_URI.length() - 4);        // loose ".xml"
@@ -107,7 +112,33 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += KEY_SURVEY_URI;
         KEY_DATA += "\"";
         KEY_DATA += KEY_TAG_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
 
+        /* Device ID */
+        KEY_DATA += KEY_VALUE_OPEN;
+        KEY_DATA += "device_id=\"";
+        KEY_DATA += DEVICE_Id;
+        KEY_DATA += "\"";
+        KEY_DATA += KEY_SHORT_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
+
+        /* Start Date */
+        KEY_DATA += KEY_VALUE_OPEN;
+        KEY_DATA += "start_date=\"";
+        KEY_DATA += START_DATE;
+        KEY_DATA += "\"";
+        KEY_DATA += KEY_SHORT_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
+
+        /* Start Date UTC */
+        KEY_DATA += KEY_VALUE_OPEN;
+        KEY_DATA += "start_date_UTC=\"";
+        KEY_DATA += START_DATE_UTC;
+        KEY_DATA += "\"";
+        KEY_DATA += KEY_SHORT_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
+
+        /* Questionnaire Results */
         for (int iQuestion = 0; iQuestion < mQuestionList.size(); iQuestion++) {
 
             questionId = mQuestionList.get(iQuestion).getQuestionId();
@@ -120,10 +151,8 @@ public class MetaData extends AppCompatActivity {
 
                 String ANSWER_DATA = "";
 
-                //Log.i(LOG_STRING,mEvaluationList.getAnswerTypeFromQuestionId(questionId));
                 switch (mEvaluationList.getAnswerTypeFromQuestionId(questionId)) {
                     case "none":
-                        //Log.i(LOG_STRING,"none");
                         ANSWER_DATA += "/>";
                         break;
                     case "text":
@@ -134,7 +163,7 @@ public class MetaData extends AppCompatActivity {
                     case "id":
                         ArrayList<String> listOfIds =
                                 mEvaluationList.getCheckedAnswerIdsFromQuestionId(questionId);
-                        Log.e(LOG_STRING,"id: "+questionId+" num: "+listOfIds.size());
+                        Log.e(LOG,"id: "+questionId+" num: "+listOfIds.size());
                         ANSWER_DATA += " option_ids=\"";
                         ANSWER_DATA += listOfIds.get(0);
                         if (listOfIds.size() > 1) {
@@ -150,15 +179,34 @@ public class MetaData extends AppCompatActivity {
                         ANSWER_DATA += KEY_VALUE_CLOSE;
                         break;
                     default:
-                        Log.e(LOG_STRING, "Unknown element found during evaluation: " +
+                        Log.e(LOG, "Unknown element found during evaluation: " +
                                 mEvaluationList.getAnswerTypeFromQuestionId(questionId));
                         break;
                 }
 
                 KEY_DATA += ANSWER_DATA;
+                KEY_DATA += KEY_NEW_LINE;
             }
         }
+
+        /* End Date */
+        KEY_DATA += KEY_VALUE_OPEN;
+        KEY_DATA += "end_date=\"";
+        KEY_DATA += END_DATE;
+        KEY_DATA += "\"";
+        KEY_DATA += KEY_SHORT_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
+
+        /* End Date UTC */
+        KEY_DATA += KEY_VALUE_OPEN;
+        KEY_DATA += "end_date_UTC=\"";
+        KEY_DATA += END_DATE_UTC;
+        KEY_DATA += "\"";
+        KEY_DATA += KEY_SHORT_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
+
         KEY_DATA += KEY_RECORD_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
         KEY_DATA += KEY_FOOT;
     }
 

@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 

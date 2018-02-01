@@ -5,7 +5,14 @@
     <string name="infoTextSave">Data was saved</string>
     <string name="hintTextAnswer">Please enter text here.</string>
     <string name="buttonTextOkay">OK</string>
-    <string name="timeRemaining">Next Questionnaire in %m %s</string>
-    <string name="menuText">Take Questionnaire</string>
+    <string name="timeRemaining">Next Questionnaire scheduled in %m %s</string>
+    <string name="menuText">Take Ques-tionnaire</string>
     <string name="noQuestionnaires">Unable to load Questionnaire.</string>
+    
+    <string name="menuHelp">Help</string>
+    <string name="menuBack">Back</string>
+
+    <string name="helpHinweis"><b>Hinweis:</b> Hin und wieder kommt es vor, dass bestimmte
+        Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann
+        automatisch eine Antwort wieder ab.</string>
 </resources>

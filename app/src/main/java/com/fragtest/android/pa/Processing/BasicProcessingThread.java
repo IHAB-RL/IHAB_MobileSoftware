@@ -59,7 +59,8 @@ public class BasicProcessingThread extends Thread {
 		recordingQueue = queue;
 
         samplerate = settings.getInt("samplerate");
-        activeFeatures = (Set) settings.getSerializable("activeFeatures");
+        chunklengthInS = settings.getInt("chunklengthInS");
+        activeFeatures = (Set) settings.getSerializable("features");
         filterHp = settings.getBoolean("filterHp");
         filterHpFrequency = settings.getInt("filterHpFrequency");
         filename = settings.getString("filename");
@@ -134,7 +135,6 @@ public class BasicProcessingThread extends Thread {
 
 	}
 
-
 	// check if all active features have been processed
 	private void isFinished() {
 
@@ -157,20 +157,21 @@ public class BasicProcessingThread extends Thread {
 		}
 	}
 
-
 	// check if feature is active, called by MainProcessingThread to
     // determine whether or not to process a given feature
 	protected boolean isActiveFeature(String s){
 		boolean result = false;
-		for (String feature : activeFeatures) {
-			if (s.equalsIgnoreCase(feature)) {
-				result = true;
-                break;
+
+		if (activeFeatures != null) {
+			for (String feature : activeFeatures) {
+				if (s.equalsIgnoreCase(feature)) {
+					result = true;
+					break;
+				}
 			}
 		}
 		return result;
 	}
-
 
     // Handler of incoming messages from clients.
 	private class ProcessHandler extends Handler {

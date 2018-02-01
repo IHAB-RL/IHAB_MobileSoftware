@@ -1,6 +1,9 @@
 package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Handler;
 import android.support.v4.BuildConfig;
 import android.support.v4.content.ContextCompat;
@@ -13,7 +16,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.ControlService;
+import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.MainActivity;
+import com.fragtest.android.pa.Menu.Help;
 import com.fragtest.android.pa.Menu.MenuPage;
 import com.fragtest.android.pa.R;
 
@@ -38,9 +43,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Stores all Views
     ArrayList<QuestionViewActive> mListOfViewsStorage;
     private boolean isCountDownRunning = false;
+    private boolean isTimer = false;
     private boolean isInForeGround = false;
     private boolean isMenu = false;
-    private boolean isQuestionnaireActive = false;
+    //private boolean isQuestionnaireActive = false;
     private boolean needsIncreasing = false;
     private boolean isPrefsInForeGround = false;
     private boolean isQuestionnairePresent = false;
@@ -49,9 +55,16 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private int mFinalCountdown = -255;
     private int mSecondsRemaining = 120;
     private String mHead, mFoot, mSurveyURI;
-
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
+    private Help mHelpScreen;
+    private boolean isImmersive = false;
+    private Units mUnits;
+    private float batteryPlaceholderWeight;
+
+    private IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    private Intent batteryStatus;
+
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
         public void run() {
@@ -59,24 +72,46 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 mSecondsRemaining = mFinalCountdown - (int) (System.currentTimeMillis() / 1000);
                 updateCountDown();
                 mCountDownHandler.postDelayed(this, mUpdateRate);
+
+                //setBatteryLogo();
             }
+        }
+    };
+    private final Runnable mHideProgressBarRunnable = new Runnable() {
+        @Override
+        public void run() {
+                hideQuestionnaireProgressBar();
+
         }
     };
     private String mMotivation = "";
     private ArrayList<String> mQuestionList;
 
-    public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
-
+    public QuestionnairePagerAdapter(Context context, ViewPager viewPager, boolean immersive) {
         mContext = context;
         MainActivity = (MainActivity) context;
         mViewPager = viewPager;
+        isImmersive = immersive;
+        mUnits = new Units(mContext);
+        batteryPlaceholderWeight = mContext.getResources().getIntArray(R.array.battery_placeholder_weight)[0]*0.01f;
         handleControls();
     }
 
     public void noQuestionnaires() {
         isQuestionnairePresent = false;
+        isTimer = false;
         mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
         mMenuPage.updateCountDownText("");
+    }
+
+    public void noTimer() {
+        isTimer = false;
+        stopCountDown();
+        mMenuPage.updateCountDownText("");
+        mCountDownHandler.post(mHideProgressBarRunnable);
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG, "Timer offline.");
+        }
     }
 
     public void questionnairePresent() {
@@ -86,7 +121,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Calculation of remaining time and visual update
     private void updateCountDown() {
 
-        if (mSecondsRemaining >= 0) {
+        if (mSecondsRemaining >= 0 && isTimer) {
             mMenuPage.updateCountdownText(mSecondsRemaining);
             setQuestionnaireProgressBar((float) mSecondsRemaining / mCountDownInterval);
         } else {
@@ -98,8 +133,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void setFinalCountDown(int finalCountDown, int countDownInterval) {
         mFinalCountdown = finalCountDown;
         mCountDownInterval = countDownInterval;
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG, "Final Countdown set: " + finalCountDown);
+
+        // Not the most beautiful and holistic approach but easiest this way
+        if (mCountDownInterval > 0) {
+            isTimer = true;
+            if (BuildConfig.DEBUG) {
+                Log.i(LOG, "Final Countdown set: " + finalCountDown);
+            }
         }
     }
 
@@ -113,25 +153,25 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     // Start/restart countdown and determine validity
     public void startCountDown() {
-
         mMenuPage.resetStartTextSize();
         mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
-        Log.e(LOG, "Text set to: "+mContext.getResources().getString(R.string.menuText));
+        Log.i(LOG, "Text set to: " + mContext.getResources().getString(R.string.menuText));
 
-        if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
-            mCountDownHandler.post(mCountDownRunnable);
-            isCountDownRunning = true;
-            if (BuildConfig.DEBUG) {
-                Log.i(LOG, "Countdown started.");
+        if (isTimer)
+            if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
+                mCountDownHandler.post(mCountDownRunnable);
+                isCountDownRunning = true;
+                if (BuildConfig.DEBUG) {
+                    Log.i(LOG, "Countdown started.");
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Log.e(LOG, "Countdown out of time.");
+                }
+                stopCountDown();
+                setQuestionnaireProgressBar(0f);
             }
-        } else {
-            if (BuildConfig.DEBUG) {
-                Log.e(LOG, "Countdown out of time.");
-            }
-            stopCountDown();
-            setQuestionnaireProgressBar(0f);
         }
-    }
 
     // End/Stop countdown
     private void stopCountDown() {
@@ -142,8 +182,59 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
+    private void setBatteryLogo() {
+        LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
+                mUnits.convertDpToPixels(12),
+                0,
+                (1.0f-2* batteryPlaceholderWeight)*(1.0f - getbatteryInfo())
+        );
+        regparams.leftMargin = mUnits.convertDpToPixels(0);
+        regparams.rightMargin = mUnits.convertDpToPixels(10);
+        MainActivity.mBatteryReg.setLayoutParams(regparams);
+
+        LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
+                mUnits.convertDpToPixels(12),
+                0,
+                (1.0f-2* batteryPlaceholderWeight)*getbatteryInfo()
+        );
+        progparams.leftMargin = mUnits.convertDpToPixels(0);
+        progparams.rightMargin = mUnits.convertDpToPixels(0);
+        MainActivity.mBatteryProg.setLayoutParams(progparams);
+    }
+
+    private float getbatteryInfo() {
+
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        return level / (float)scale;
+    }
+
     // Initialise menu with visible countdown
     public void createMenu() {
+
+        batteryStatus = mContext.registerReceiver(null, ifilter);
+
+        isMenu = true;
+        needsIncreasing = false;
+        sendMessage(ControlService.MSG_ISMENU);
+        // Instantiates a MenuPage Object based on Contents of raw XML File
+        mMenuPage = new MenuPage(MainActivity, this);
+        mNUM_PAGES = 1;
+        mViewPager.setOffscreenPageLimit(0);
+
+        mListOfActiveViews = new ArrayList<>();
+        mListOfViewsStorage = new ArrayList<>();
+
+        createMenuLayout();
+        setControlsMenu();
+
+        setBatteryLogo();
+
+        sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
+    }
+
+    public void backToMenu() {
 
         isMenu = true;
         sendMessage(ControlService.MSG_ISMENU);
@@ -158,8 +249,41 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         createMenuLayout();
         setControlsMenu();
 
-        sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
-        isQuestionnaireActive = false;
+        onResume();
+
+        if (!isQuestionnairePresent) {
+                noQuestionnaires();
+        }
+
+    }
+
+    public void createHelpScreen() {
+
+        // Instantiates a MenuPage Object based on Contents of raw XML File
+        mHelpScreen = new Help(MainActivity, this);
+        mNUM_PAGES = 1;
+        mViewPager.setOffscreenPageLimit(0);
+
+        mListOfActiveViews = new ArrayList<>();
+        mListOfViewsStorage = new ArrayList<>();
+
+        createHelpLayout();
+    }
+
+    private void createHelpLayout() {
+
+        LinearLayout layout = mHelpScreen.generateView();
+
+        layout.setId(0);
+        // Adds the Layout to List carrying all ACTIVE Views
+        mListOfActiveViews.add(new QuestionViewActive(layout, layout.getId(),
+                0, true, null));
+        // Adds the Layout to List storing ALL Views
+        mListOfViewsStorage.add(new QuestionViewActive(layout, layout.getId(),
+                0, true, null));
+
+        notifyDataSetChanged();
+        mViewPager.setCurrentItem(0);
     }
 
     // Initialise questionnaire based on new input parameters
@@ -169,7 +293,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isMenu = false;
         stopCountDown();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
-        isQuestionnaireActive = true;
+        //isQuestionnaireActive = true;
         mQuestionList = questionList;
         mHead = head;
         mFoot = foot;
@@ -222,22 +346,38 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager.setCurrentItem(0);
         setArrows(0);
         setQuestionnaireProgressBar();
+        needsIncreasing = false;
     }
 
     // Simply increases text size of "Start Questionnaire" item in user menu
     public void proposeQuestionnaire() {
+        backToMenu();
+        needsIncreasing = true;
         if (isInForeGround) {
             mMenuPage.increaseStartTextSize();
-        } else {
-            needsIncreasing = true;
-
-            /*
-            final Intent notificationIntent = new Intent(mContext, MainActivity.class);
-            notificationIntent.setAction(Intent.ACTION_MAIN);
-            notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-            notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            */
         }
+    }
+
+    private void hideQuestionnaireProgressBar() {
+        View progress = MainActivity.mProgress;
+        View regress = MainActivity.mRegress;
+
+        float nProgress = 0;
+        float nRegress = 1;
+
+        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nRegress
+        );
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nProgress
+        );
+
+        progress.setLayoutParams(progParams);
+        regress.setLayoutParams(regParams);
     }
 
     // Set the horizontal Indicator at the Top to follow Page Position
@@ -369,6 +509,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Sets up visible control elements for menu i.e. status bar
     private void setControlsMenu() {
 
+        MainActivity.mLogo.setText(R.string.menuHelp);
         MainActivity.mArrowForward.setVisibility(View.INVISIBLE);
         MainActivity.mArrowBack.setVisibility(View.INVISIBLE);
         MainActivity.mRevert.setVisibility(View.INVISIBLE);
@@ -376,12 +517,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 ContextCompat.getColor(mContext, R.color.JadeRed));
         MainActivity.mRegress.setBackgroundColor(
                 ContextCompat.getColor(mContext, R.color.JadeGray));
-        MainActivity.mLogo.setEnabled(false);
+        MainActivity.mLogo.setEnabled(true);
     }
 
     // Sets up visible control elements for questionnaire i.e. navigation symbols
     private void setControlsQuestionnaire() {
 
+        MainActivity.mLogo.setText("IHAB");
         MainActivity.mArrowForward.setVisibility(View.VISIBLE);
         MainActivity.mArrowBack.setVisibility(View.VISIBLE);
         MainActivity.mRevert.setVisibility(View.VISIBLE);
@@ -399,7 +541,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Extracts Question Details from Questionnaire and creates Question
             Question question = mQuestionnaire.createQuestion(iQuestion);
             // Inflates Question Layout based on Question Details
-            LinearLayout layout = mQuestionnaire.generateView(question);
+            LinearLayout layout = mQuestionnaire.generateView(question, isImmersive);
             // Sets Layout Id to Question Id
             layout.setId(mQuestionnaire.getId(question));
             // Adds the Layout to List carrying all ACTIVE Views
@@ -417,8 +559,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createMenu();
-                startCountDown();
+
+                //isPrefsInForeGround = true;
+                //setPrefsInForeGround(isPrefsInForeGround);
+                if (isMenu) {
+                    createHelpScreen();
+                } else {
+                    //createMenu();
+                    //startCountDown();
+                }
             }
         });
         MainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
@@ -531,6 +680,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.messageService(what);
     }
 
+    public void setPrefsInForeGround(boolean state) {
+        isPrefsInForeGround = state;
+    }
+
     /**
      * Lifecycle methods
      **/
@@ -545,19 +698,25 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onResume() {
 
-        if(isMenu) {
+        Log.i(LOG, "onResume");
+
+        if(isMenu && isTimer) {
             isCountDownRunning = false;
             if (isQuestionnairePresent) {
                 startCountDown();
             }
+        } else {
+            // This should not be needed but is due to some weird behaviour.
+            mCountDownHandler.post(mHideProgressBarRunnable);
         }
 
         if (isMenu && needsIncreasing) {
             mMenuPage.increaseStartTextSize();
             mMenuPage.updateCountdownText(0);
             setQuestionnaireProgressBar(0f);
-            needsIncreasing = false;
         }
+
+        setBatteryLogo();
 
         isInForeGround = true;
     }
@@ -570,16 +729,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onStop() {
         isCountDownRunning = false;
-        if (isMenu && !isPrefsInForeGround) {
+        //if (isMenu && !isPrefsInForeGround) {
             //sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
-        }
+        //}
         if (!isMenu && !isPrefsInForeGround) {
             sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         }
     }
-
-    public void setPrefsInForeGround(boolean state) {
-        isPrefsInForeGround = state;
-    }
-
 }

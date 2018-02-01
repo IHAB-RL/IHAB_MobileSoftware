@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
+import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.R;
 
 /**
@@ -30,13 +31,16 @@ public class AnswerTypeText extends AppCompatActivity {
     public LinearLayout.LayoutParams answerParams;
     private Button mButtonOkay;
     private boolean isSystem = false;
+    private boolean isImmersive = false;
 
 
-    public AnswerTypeText(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
+    public AnswerTypeText(Context context, Questionnaire questionnaire, AnswerLayout qParent,
+                          int nQuestionId, boolean immersive) {
         mContext = context;
         mQuestionId = nQuestionId;
         parent = qParent;
         mQuestionnaire = questionnaire;
+        isImmersive = immersive;
     }
 
     public boolean addQuestion(String sAnswer) {
@@ -74,12 +78,17 @@ public class AnswerTypeText extends AppCompatActivity {
 
             mButtonOkay = new Button(mContext);
             mButtonOkay.setText(R.string.buttonTextOkay);
+            mButtonOkay.setScaleX(1.5f);
+            mButtonOkay.setScaleY(1.5f);
             mButtonOkay.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
             mButtonOkay.setBackground(ContextCompat.getDrawable(mContext, R.drawable.button));
             LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
+
+            buttonParams.topMargin = 96;
+            buttonParams.bottomMargin = 48;
 
             mAnswerText.isFocusableInTouchMode();
 
@@ -113,6 +122,9 @@ public class AnswerTypeText extends AppCompatActivity {
                     } else {
                         Log.e(LOG_STRING, "No text was entered.");
                     }
+
+                    ((MainActivity) mContext).setImmersive();
+                    ((MainActivity) mContext).incrementPage();
                 }
             });
         }

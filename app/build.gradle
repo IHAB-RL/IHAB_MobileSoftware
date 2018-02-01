@@ -9,7 +9,7 @@ android {
             keyPassword 'android'
         }
     }
-    compileSdkVersion 26
+    compileSdkVersion 25
     defaultConfig {
         applicationId "com.fragtest.android.pa"
         minSdkVersion 22

@@ -25,13 +25,9 @@ import java.util.List;
 
 public class Questionnaire {
 
-    private static final String LOG_STRING = "Questionnaire";
+    private static final String LOG = "Questionnaire";
     // Accumulator for ids, values and texts gathered from user input
     private final EvaluationList mEvaluationList;
-    // Number of pages in questionnaire (visible and hidden)
-    private int mNumPages, mViewPagerHeight;
-    // ArrayList containing all questions (including all attached information)
-    private ArrayList<String> mQuestionList;
     // Context of QuestionnairePageAdapter for visibility
     private final QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
@@ -39,11 +35,16 @@ public class Questionnaire {
     // Basic information about all available questions
     private final ArrayList<QuestionInfo> mQuestionInfo;
     private final MandatoryInfo mMandatoryInfo;
-    private MetaData mMetaData;
     private final FileIO mFileIO;
-    private String mHead, mFoot, mSurveyURI, mMotivation;
     // Flag: display forced empty vertical spaces
     private final boolean acceptBlankSpaces = false;
+    // Number of pages in questionnaire (visible and hidden)
+    private int mNumPages, mViewPagerHeight;
+    // ArrayList containing all questions (including all attached information)
+    private ArrayList<String> mQuestionList;
+    private MetaData mMetaData;
+    private String mHead, mFoot, mSurveyURI, mMotivation;
+    private boolean isImmersive = false;
 
     public Questionnaire(Context context, String head, String foot, String surveyUri,
                          String motivation, QuestionnairePagerAdapter contextQPA) {
@@ -88,7 +89,9 @@ public class Questionnaire {
     }
 
     // Builds the Layout of each Stage Question
-    LinearLayout generateView(Question question) {
+    LinearLayout generateView(Question question, boolean immersive) {
+
+        isImmersive = immersive;
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
@@ -129,24 +132,24 @@ public class Questionnaire {
 
         // In case of emoji type
         final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         // In case of sliderFree type
         final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeText answerTypeText = new AnswerTypeText(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
                 mContext, this, answerLayout);
 
-        final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
-                mContext, this, question.getQuestionId());
+        /*final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
+                mContext, this, question.getQuestionId());*/
 
         final AnswerTypePhotograph answerTypePhotograph = new AnswerTypePhotograph(
                 mContext, answerLayout);
@@ -165,14 +168,15 @@ public class Questionnaire {
             int nAnswerId = currentAnswer.Id;
             int nAnswerGroup = currentAnswer.Group;
             boolean isDefault = currentAnswer.isDefault();
+            boolean isExclusive = currentAnswer.isExclusive();
 
             if (((nAnswerId == 66666) && (acceptBlankSpaces)) || (nAnswerId != 66666)) {
 
                 switch (sType) {
-                    case "date": {
+                    /*case "date": {
                         answerTypeDate.addAnswer(sAnswer);
                         break;
-                    }
+                    }*/
                     case "radio": {
                         isRadio = true;
                         answerTypeRadio.addAnswer(nAnswerId, sAnswer, isDefault);
@@ -180,7 +184,8 @@ public class Questionnaire {
                     }
                     case "checkbox": {
                         isCheckBox = true;
-                        answerTypeCheckBox.addAnswer(nAnswerId, sAnswer, nAnswerGroup, isDefault);
+                        answerTypeCheckBox.addAnswer(nAnswerId, sAnswer, nAnswerGroup,
+                                isDefault, isExclusive);
                         break;
                     }
                     case "text": {
@@ -218,7 +223,7 @@ public class Questionnaire {
                     default: {
                         isRadio = false;
                         if (BuildConfig.DEBUG) {
-                            Log.e(LOG_STRING, "Weird object found. Id: " +
+                            Log.e(LOG, "Weird object found. Id: " +
                                     question.getQuestionId());
                         }
                         break;
@@ -310,13 +315,20 @@ public class Questionnaire {
         return question.getQuestionId();
     }
 
+    // Function checks all available pages on whether their filtering condition has been met and
+    // toggles visibility by destroying or creating the views and adding them to the list of
+    // views which is handled by QuestionnairePagerAdapter
     boolean checkVisibility() {
-        // Function checks all available pages on whether their filtering condition has been met and
-        // toggles visibility by destroying or creating the views and adding them to the list of
-        // views which is handled by QuestionnairePagerAdapter
+
+        String sid = "";
+        for (int iQ = 0; iQ < mEvaluationList.size(); iQ++) {
+            sid += mEvaluationList.get(iQ).getValue();
+            sid += ", ";
+        }
 
         boolean wasChanged = true;
 
+        // Repeat until nothing changes anymore
         while (wasChanged) {
             wasChanged = false;
 
@@ -326,33 +338,38 @@ public class Questionnaire {
 
                 if (qI.isActive()) {                                                                    // View is active but might be obsolete
 
-                    if (qI.isHidden()) {                                                                // View has been declared invisible
+                    if (qI.isHidden()) {                                                                // View is declared "Hidden"
                         removeQuestion(iPos);
                         wasChanged = true;
-                    } else if (!mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {       // Not ALL MUST EXIST ids are INCLUDED
+                    } else if (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // Not even 1 positive Filter Id exists OR No positive filter Ids declared
+                            && qI.getFilterIdPositive().size() > 0) {
                         removeQuestion(iPos);
                         wasChanged = true;
-                    } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // at least one MUST NOT EXIST id IS INCLUDED
+                    } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // At least 1 negative filter Id exists
                         removeQuestion(iPos);
                         wasChanged = true;
                     }
 
                 } else {                                                                                // View is inactive but should possibly be active
 
-                    if (!qI.isHidden()                                                                  // View has not been declared invisible
-                            && !mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())    // No MUST NOT EXIST id is  INCLUDED
-                            && mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {        // MUST EXIST ids are ALL INCLUDED
+                    if (!qI.isHidden()
+                            && (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // View is not declared "Hidden"
+                            || qI.getFilterIdPositive().size() == 0)                                    // && (At least 1 positive Filter Id exists OR No positive filter Ids declared)
+                            && (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())   // && (Not even 1 negative Filter Id exists OR No negative filter Ids declared)
+                            || qI.getFilterIdNegative().size() == 0)
+                            ) {
                         addQuestion(iPos);
                         wasChanged = true;
                     }
                 }
             }
-    }
+        }
         return true;
     }
 
+    // Adds the question to the displayed list
     private boolean addQuestion(int iPos) {
-        // Adds the question to the displayed list
+
         mQuestionInfo.get(iPos).setActive();
         // View is fetched from Storage List and added to Active List
         mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
@@ -363,18 +380,12 @@ public class Questionnaire {
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
+
         return true;
     }
 
+    // Removes the question from the displayed list and all given answer ids from memory
     private boolean removeQuestion(int iPos) {
-        // Removes the question from the displayed list
-
-        /*
-        // If view is mandatory but declared hidden
-        if (mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId()) &&
-                mMandatoryInfo.isHiddenFromId(mQuestionInfo.get(iPos).getId())) {
-        }
-        */
 
         // If view is not mandatory -> can really be removed including entries in mEvaluationList
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
@@ -393,10 +404,10 @@ public class Questionnaire {
                     if (checkBox != null) {
                         checkBox.setChecked(false);
                     }
-                } else if(sType.equals("radio") && mListOfAnswerIds.get(iAnswer) != 66666) {
+                } else if (sType.equals("radio") && mListOfAnswerIds.get(iAnswer) != 66666) {
                     RadioButton radioButton = (RadioButton) mContextQPA.mViewPager.findViewById(
                             mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
-                    if ( radioButton != null) {
+                    if (radioButton != null) {
                         radioButton.setChecked(false);
                     }
                 }
@@ -413,8 +424,8 @@ public class Questionnaire {
         return true;
     }
 
+    // Renews all the positions in information object gathered from actual order
     private void renewPositionsInPager() {
-        // Renews all the positions in information object gathered from actual order
 
         for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
             int iId = mQuestionInfo.get(iItem).getId();

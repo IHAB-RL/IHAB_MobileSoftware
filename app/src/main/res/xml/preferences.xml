@@ -15,8 +15,8 @@
 
     </PreferenceCategory>
 
-
-    <PreferenceCategory android:title="Lock Preferences">
+<!--
+    <PreferenceCategory android:title="Hide Preferences">
 
         <SwitchPreference
             android:layout_width="wrap_content"
@@ -24,10 +24,11 @@
             android:defaultValue="false"
             android:checked="false"
             android:key="isLocked"
-            android:title="Lock Preferences"
-            android:summary="Hide preferences menu" />
+            android:title="Hide Preferences"
+            android:summary="Make preferences menu invisible" />
 
     </PreferenceCategory>
+    -->
 
     <PreferenceCategory android:title="General">
 
@@ -43,6 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="true"
+            android:checked="true"
             android:key="isTimer"
             android:title="Activate timer"
             android:summary="Start questionnaire at defined intervals" />

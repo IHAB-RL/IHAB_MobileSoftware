@@ -31,9 +31,10 @@ public class AnswerTypeEmoji extends AppCompatActivity {
     private String LOG_STRING = "AnswerTypeEmoji";
     private int mDefault = -1;
     private int mViewPagerHeight = 0;
+    private boolean isImmersive = false;
 
     public AnswerTypeEmoji(Context context, Questionnaire questionnaire,
-                           AnswerLayout qParent, int questionId) {
+                           AnswerLayout qParent, int questionId, boolean immersive) {
 
         mContext = context;
         mParent = qParent;
@@ -41,6 +42,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
         mListOfAnswers = new ArrayList<>();
         mListOfIds = new ArrayList<>();
         mQuestionId = questionId;
+        isImmersive = immersive;
 
         drawables[0] = R.drawable.em1of5;
         drawables[1] = R.drawable.em2of5;
@@ -66,7 +68,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
 
     public boolean buildView() {
 
-        int usableHeight = (new Units(mContext)).getUsableSliderHeight();
+        int usableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive);
         int numEmojis = mListOfAnswers.size();
         // Make size of emojis adaptive
         int emojiSize = (int) (usableHeight / (1.2f * numEmojis));
@@ -121,8 +123,8 @@ public class AnswerTypeEmoji extends AppCompatActivity {
             placeHolder.setBackgroundColor(ContextCompat.getColor(
                     mContext, R.color.BackgroundColor));
             placeHolder.setLayoutParams(new LinearLayout.LayoutParams(
-                    (int) (0.2 * emojiSize),
-                    (int) (0.2 * emojiSize),
+                    (int) (0.16f * emojiSize),
+                    (int) (0.16f * emojiSize),
                     1.0f
             ));
 

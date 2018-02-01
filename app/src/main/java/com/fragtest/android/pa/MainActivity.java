@@ -2,23 +2,31 @@ package com.fragtest.android.pa;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,10 +34,15 @@ import android.widget.Toast;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
+import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
+import static com.fragtest.android.pa.ControlService.USE_KIOSK_MODE;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,25 +50,8 @@ public class MainActivity extends AppCompatActivity {
     static final String LOG = "MainActivity";
     private static final String KEY_QUEST = "whichQuest";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
-    private static final String KEY_LOCKED = "isLocked";
-    public ViewPager mViewPager = null;
-    public TextView mLogo;
-    public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
-    private QuestionnairePagerAdapter mAdapter;
-    private boolean mServiceIsBound;
-    private boolean isPrefsInForeGround = false;
-    private boolean isActivityRunning = false;
-    private boolean mServiceIsRecording;
-    private boolean showConfigButton = true;
-    private boolean showRecordingButton = true;
-    private boolean isQuestionnairePresent = false;
-    private boolean isTimer = false;
-    private Messenger mServiceMessenger;
-    final Messenger mMessageHandler = new Messenger(new MessageHandler());
-
-
-
-
+    private int nPermissions = 8;
+    private int iPermission;
     private final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
     private final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
     private final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
@@ -64,8 +60,47 @@ public class MainActivity extends AppCompatActivity {
     private final static int MY_PERMISSIONS_WAKE_LOCK = 5;
     private final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
     private final static int MY_PERMISSIONS_CAMERA = 7;
+    final Messenger mMessageHandler = new Messenger(new MessageHandler());
+    public ViewPager mViewPager = null;
+    public TextView mLogo;
+    public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig,
+            mBatteryReg, mBatteryProg, mCharging;
+    private QuestionnairePagerAdapter mAdapter;
+    private boolean mServiceIsBound;
+    private boolean isPrefsInForeGround = false;
+    private boolean isActivityRunning = false;
+    private boolean mServiceIsRecording;
+    private Messenger mServiceMessenger;
+    private boolean isQuestionnairePresent = true;
+    private String[] requestString;
 
+    private boolean isImmersive = USE_KIOSK_MODE;
+    private boolean isPinned = USE_KIOSK_MODE;
 
+    private int requestIterator = 0;
+
+    private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
+
+    private boolean permissionGranted = false;
+
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL;
+
+            if (isCharging) {
+                mCharging.setVisibility(View.VISIBLE);
+            } else {
+                mCharging.setVisibility(View.INVISIBLE);
+            }
+        }
+    };
+
+    // preferences
+    private SharedPreferences sharedPreferences;
+    private boolean isTimer, showConfigButton = false, showRecordingButton = true;
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -105,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
             if (mViewPager.getCurrentItem() != 0) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
             } else {
-                // Might be too unsafe for elderly people
+                // Might be unsafe because this accidentally resets the timer and starts a new cycle
                 //mAdapter.createMenu();
             }
         }
@@ -158,13 +193,35 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        requestString = getResources().getStringArray(R.array.permissionMessages);
+        switch (requestCode) {
+            case MY_PERMISSIONS_READ_EXTERNAL_STORAGE : {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    permissionGranted = true;
+                    doBindService();
+                } else {
+                    Toast.makeText(this, requestString[requestIterator%(requestString.length)], Toast.LENGTH_SHORT).show();
+                    requestPermissions(iPermission);
+                    requestIterator++;
+                }
+            }
+        }
+    }
+
     void doBindService() {
-        if (!isServiceRunning()) {
+
+        if (!isServiceRunning() && permissionGranted) {
             startService(new Intent(this, ControlService.class));
         }
-        bindService(new Intent(this, ControlService.class),
-                mConnection, Context.BIND_AUTO_CREATE);
-        mServiceIsBound = true;
+
+        if (permissionGranted) {
+            bindService(new Intent(this, ControlService.class),
+                    mConnection, Context.BIND_AUTO_CREATE);
+            mServiceIsBound = true;
+        }
     }
 
     void doUnbindService() {
@@ -176,13 +233,93 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void handleNewPagerAdapter() {
-
         mViewPager = null;
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        mAdapter = new QuestionnairePagerAdapter(this, mViewPager);
+        mAdapter = new QuestionnairePagerAdapter(this, mViewPager, isImmersive);
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
+    }
+
+    private void shipPreferencesToControlService() {
+        // Load information from shared preferences and bundle them
+        Bundle dataPreferences = new Bundle();
+        // String
+        dataPreferences.putString("whichQuest", sharedPreferences.getString("whichQuest", ""));
+        dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
+        dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
+        dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
+        // Boolean
+        dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
+        dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
+        //dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));
+        dataPreferences.putBoolean("keepAudioCache", sharedPreferences.getBoolean("keepAudioCache", InitValues.keepAudioCache));
+        dataPreferences.putBoolean("downsample", sharedPreferences.getBoolean("downsample", InitValues.downsample));
+        dataPreferences.putBoolean("showConfigButton", sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton));
+        dataPreferences.putBoolean("showRecordingButton", sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton));
+        dataPreferences.putBoolean("filterHp", sharedPreferences.getBoolean("filterHp", InitValues.filterHp));
+        // String Set
+        Set<String> activeFeatures = sharedPreferences.getStringSet("features", null);
+        // String Set cannot be bundled natively, cast to ArrayList
+        ArrayList<String> listActiveFeatures = new ArrayList<>();
+        listActiveFeatures.addAll(activeFeatures);
+        dataPreferences.putStringArrayList("features", listActiveFeatures);
+
+        messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
+    }
+
+    public void requestPermissions(int iPermission) {
+
+        // TODO: Make array
+        switch (iPermission) {
+            case 0:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+                break;
+
+            case 1:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+                break;
+
+            case 2:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
+                    MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
+                break;
+
+            case 3:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    MY_PERMISSIONS_RECORD_AUDIO);
+                break;
+
+            case 4:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.VIBRATE},
+                    MY_PERMISSIONS_VIBRATE);
+                break;
+
+            case 5:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WAKE_LOCK},
+                    MY_PERMISSIONS_WAKE_LOCK);
+                break;
+
+            case 6:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.DISABLE_KEYGUARD},
+                    MY_PERMISSIONS_DISABLE_KEYGUARD);
+                break;
+
+            case 7:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    MY_PERMISSIONS_CAMERA);
+                break;
+        }
     }
 
     /**
@@ -192,61 +329,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-
-
-
-
-        Log.d(LOG, "Requesting Permissions.");
-
-        //Android 6.0.1+
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
-
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
-                MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
-
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.RECORD_AUDIO},
-                MY_PERMISSIONS_RECORD_AUDIO);
-
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.VIBRATE},
-                MY_PERMISSIONS_VIBRATE);
-
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WAKE_LOCK},
-                MY_PERMISSIONS_WAKE_LOCK);
-
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.DISABLE_KEYGUARD},
-                MY_PERMISSIONS_DISABLE_KEYGUARD);
-
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.CAMERA},
-                MY_PERMISSIONS_CAMERA);
-
-
-
-
-
-
-
-
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        showConfigButton = sharedPreferences.getBoolean("showConfigButton", showConfigButton);
+        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", showRecordingButton);
 
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "OnCreate");
+            Log.i(LOG, "OnCreate");
         }
 
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
 
-            //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            Log.d(LOG, "Requesting Permissions.");
+            for (iPermission = 0; iPermission < nPermissions; iPermission++) {
+                requestPermissions(iPermission);
+            }
+
             setContentView(R.layout.activity_main);
 
             mLogo = (TextView) findViewById(R.id.Action_Logo);
@@ -257,13 +355,14 @@ public class MainActivity extends AppCompatActivity {
             mProgress = findViewById(R.id.progress);
             mRegress = findViewById(R.id.regress);
             mConfig = findViewById(R.id.Action_Config);
-
-
-            //mConfig.setVisibility(View.INVISIBLE);
+            mBatteryProg = findViewById(R.id.battery_prog);
+            mBatteryReg = findViewById(R.id.battery_reg);
+            mCharging = findViewById(R.id.charging);
 
             mRecord.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
                     if (mServiceIsBound) {
                         if (mServiceIsRecording) {
                             messageService(ControlService.MSG_STOP_RECORDING);
@@ -276,104 +375,55 @@ public class MainActivity extends AppCompatActivity {
                                 "Not connected to service.",
                                 Toast.LENGTH_SHORT).show();
                     }
+
+
                 }
             });
 
-            if (showConfigButton) {
-                mConfig.setOnClickListener(new View.OnClickListener() {
+            mConfig.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.e(LOG, "CLICK");
                         startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
                         isPrefsInForeGround = true;
                         mAdapter.setPrefsInForeGround(isPrefsInForeGround);
                     }
                 });
-            }
+
 
             handleNewPagerAdapter();
             doBindService();
-
-            mAdapter.createMenu();
-
-            //mWindow = this.getWindow();
-            //mWindow.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-            //mWindow.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-            //mWindow.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            mAdapter.onCreate();
+            this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
+            mAdapter.createMenu();
+            mAdapter.onCreate();
             isActivityRunning = true;
         }
     }
 
-
-
-
-
-
-
-
-
     @Override
     protected void onDestroy() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onDestroy");
+            Log.i(LOG, "onDestroy");
         }
         super.onDestroy();
         doUnbindService();
-
     }
 
     @Override
     protected void onStart() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onStart");
+            Log.i(LOG, "onStart");
         }
         super.onStart();
         mAdapter.onStart();
-
-
-
-
-
-
-/*
-        // start lock task mode if it's not already active
-        ActivityManager am = (ActivityManager) getSystemService(
-                Context.ACTIVITY_SERVICE);
-        // ActivityManager.getLockTaskModeState api is not available in pre-M.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            if (!am.isInLockTaskMode()) {
-                startLockTask();
-                //setLockTaskPackages();
-            }
-        } else {
-            if (am.getLockTaskModeState() ==
-                    ActivityManager.LOCK_TASK_MODE_NONE) {
-                startLockTask();
-            }
-        }
-*/
-
-
-
-
-
     }
-
-
-
-
-
-
 
     @Override
     protected void onRestart() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onRestart");
+            Log.i(LOG, "onRestart");
         }
         super.onRestart();
     }
@@ -382,7 +432,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onStop");
+            Log.i(LOG, "onStop");
         }
         mAdapter.onStop();
     }
@@ -390,7 +440,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onPause");
+            Log.i(LOG, "onPause");
         }
         mAdapter.onPause();
         super.onPause();
@@ -399,33 +449,55 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onResume");
+            Log.i(LOG, "onResume");
         }
 
         if (isPrefsInForeGround) {
             isPrefsInForeGround = false;
             mAdapter.setPrefsInForeGround(isPrefsInForeGround);
 
-            /*
-            SharedPreferences sharedPreferences =
-                    PreferenceManager.getDefaultSharedPreferences(this);
-            String quest = sharedPreferences.getString(KEY_QUEST, "");
-
-
-            boolean isLocked = sharedPreferences.getBoolean(KEY_LOCKED, false);
-
-            Bundle data = new Bundle();
-            data.putBoolean(KEY_LOCKED, isLocked);
-
-            if (!quest.isEmpty()) {
-                data.putString(KEY_QUEST, quest);
-            }
-
-            messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, data);*/
-            messageService(ControlService.MSG_CHECK_FOR_PREFERENCES);
+            shipPreferencesToControlService();
         }
         mAdapter.onResume();
         super.onResume();
+
+        if (isImmersive) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
+
+        if (isPinned) {
+            // start lock task mode if it's not already active
+            ActivityManager am = (ActivityManager) getSystemService(
+                    Context.ACTIVITY_SERVICE);
+            // ActivityManager.getLockTaskModeState api is not available in pre-M.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                if (!am.isInLockTaskMode()) {
+                    startLockTask();
+                    //setLockTaskPackages();
+                }
+            } else {
+                if (am.getLockTaskModeState() ==
+                        ActivityManager.LOCK_TASK_MODE_NONE) {
+                    startLockTask();
+                }
+            }
+        }
+    }
+
+    // This disables the Volume Buttons
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (blockedKeys.contains(event.getKeyCode())) {
+            return true;
+        } else {
+            return super.dispatchKeyEvent(event);
+        }
     }
 
     private void setConfigVisibility() {
@@ -434,8 +506,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mConfig.setVisibility(View.GONE);
         }
-
-        Log.e(LOG, "Config visibility set to: "+showConfigButton);
     }
 
     private void setRecordingVisibility() {
@@ -446,6 +516,26 @@ public class MainActivity extends AppCompatActivity {
 //        }
 //        Log.e(LOG, "Recording visibility set to: "+showRecordingButton);
     }
+
+    public void incrementPage() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
+    }
+
+    public void setImmersive() {
+        if (isImmersive) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
+    }
+
+    /**
+     * Message Handling
+     **/
 
     class MessageHandler extends Handler {
 
@@ -460,14 +550,14 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_SET_VISIBILITY:
 
-                    Bundle data = msg.getData();
-                    showConfigButton = data.getBoolean("showConfigButton", false);
-                    showRecordingButton = data.getBoolean("showRecordingButton", false);
-                    isQuestionnairePresent = data.getBoolean("isQuestionnairePresent", false);
+                    Bundle dataVisibility = msg.getData();
+                    showConfigButton = dataVisibility.getBoolean("showConfigButton", showConfigButton);
+                    showRecordingButton = dataVisibility.getBoolean("showRecordingButton", showRecordingButton);
+                    isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
                     if (isQuestionnairePresent) {
                         mAdapter.questionnairePresent();
-                        mAdapter.displayManualStart();
+                        //mAdapter.displayManualStart();
                     }
 
                     setConfigVisibility();
@@ -475,47 +565,41 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
-                    Log.i(LOG, "NO QUEST FOUND.");
+                    isQuestionnairePresent = false;
                     mAdapter.noQuestionnaires();
-                    showConfigButton = msg.getData().getBoolean("showConfigButton", false);
-                    showRecordingButton = msg.getData().getBoolean("showRecordingButton", false);
-                    isQuestionnairePresent = msg.getData().getBoolean("isQuestionnairePresent", false);
+                    break;
 
-                    setConfigVisibility();
-                    setRecordingVisibility();
+                case MSG_CHANGE_PREFERENCE:
+                    Bundle data = msg.getData();
+                    if (data.getString("type").equals("boolean")) {
+                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).
+                                edit().putBoolean(data.getString("key"), data.getBoolean("value")).
+                                apply();
+
+                        Log.i(LOG, "Boolean "+data.getString("key")+" changed to "+PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(data.getString("key"), false));
+                    }
+                    shipPreferencesToControlService();
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
-                    Log.e(LOG, "isPrefsInForeGround: "+isPrefsInForeGround);
 
+                    isQuestionnairePresent = true;
                     isTimer = true;
-                    showConfigButton = msg.getData().getBoolean("showConfigButton", false);
-                    showRecordingButton = msg.getData().getBoolean("showRecordingButton", false);
-                    isQuestionnairePresent = msg.getData().getBoolean("isQuestionnairePresent", false);
-
-                    setConfigVisibility();
-                    setRecordingVisibility();
 
                     if (isQuestionnairePresent) {
-                        Log.e(LOG, "Trying to set FCD");
                         int finalCountDown = msg.getData().getInt("finalCountDown");
                         int countDownInterval = msg.getData().getInt("countDownInterval");
                         if (isTimer) {
-                            Log.i(LOG, "here.");
                             mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
                             mAdapter.startCountDown();
                         } else {
-                            Log.i(LOG, "here here.");
                             mAdapter.setQuestionnaireProgressBar(100);
                         }
                         mAdapter.questionnairePresent();
-                        mAdapter.displayManualStart();
+                        //mAdapter.displayManualStart();
                     } else {
-                        Log.i(LOG, "here here here.");
                         mAdapter.noQuestionnaires();
                     }
-
-
                     break;
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
@@ -529,7 +613,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
-
                     mAdapter.proposeQuestionnaire();
                     break;
 
@@ -537,30 +620,6 @@ public class MainActivity extends AppCompatActivity {
                     // Set UI to match ControlService's state
                     Bundle status = msg.getData();
                     mServiceIsRecording = status.getBoolean("isRecording");
-                    isQuestionnairePresent = status.getBoolean("isQuestionnairePresent");
-                    showConfigButton = status.getBoolean("showConfigButton");
-                    showRecordingButton = status.getBoolean("showRecordingButton");
-                    isTimer = status.getBoolean("isTimer");
-
-                    if (!isTimer) {
-                        mAdapter.setQuestionnaireProgressBar(100);
-                    } else {
-
-                    }
-
-                    if (isQuestionnairePresent) {
-                        mAdapter.questionnairePresent();
-                        mAdapter.displayManualStart();
-                    } else {
-                        mAdapter.noQuestionnaires();
-                    }
-
-                    setConfigVisibility();
-                    setRecordingVisibility();
-
-                    if (status.getBoolean("isQuestionnairePending", false)) {
-                        mAdapter.proposeQuestionnaire();
-                    }
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
@@ -573,31 +632,19 @@ public class MainActivity extends AppCompatActivity {
                                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                                         darker_gray, null)));
                     }
-
                     break;
 
-                case ControlService.MSG_CHECK_FOR_PREFERENCES:
-                    messageService(msg.what, msg.getData());
+                case ControlService.MSG_NO_TIMER:
+                    isTimer = false;
+                    mAdapter.noTimer();
                     break;
 
                 case ControlService.MSG_RESET_MENU:
                     mAdapter.resetMenu();
-
-                    showConfigButton = msg.getData().getBoolean("showConfigButton");
-                    showRecordingButton = msg.getData().getBoolean("showRecordingButton");
-                    isQuestionnairePresent = msg.getData().getBoolean("isQuestionnairePresent");
-                    if (!isQuestionnairePresent) {
-                        mAdapter.noQuestionnaires();
-                        Log.e(LOG, "Received: no questionnaires");
-                    }
-
-                    setConfigVisibility();
-                    setRecordingVisibility();
                     break;
 
                 case ControlService.MSG_PREFS_IN_FOREGROUND:
                     isPrefsInForeGround = msg.getData().getBoolean(KEY_PREFS_IN_FOREGROUND);
-                    Log.e(LOG, "Foreground: "+isPrefsInForeGround);
                     break;
 
                 case ControlService.MSG_START_RECORDING:
@@ -612,5 +659,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 }

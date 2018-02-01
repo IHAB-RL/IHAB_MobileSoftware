@@ -39,6 +39,7 @@ public class EventTimer {
         // Alarm will call EventReceiver class by sending broadcast along with messenger context
         Intent intent = new Intent(context, EventReceiver.class);
         intent.putExtra("Messenger", messenger);
+
         mAlarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
         // Schedules the initialisation of new questionnaire
@@ -70,7 +71,7 @@ public class EventTimer {
         isSet = false;
 
         if (BuildConfig.DEBUG) {
-            Log.i(LOG,"Timer canceled.");
+            Log.i(LOG,"Timer cancelled.");
         }
     }
 

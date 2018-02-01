@@ -3,9 +3,15 @@
     <string name="buttonTextFinish">Abschließen</string>
     <string name="infoTextRevert">Daten wurden verworfen</string>
     <string name="infoTextSave">Daten wurden gespeichert</string>
-    <string name="hintTextAnswer">Bitte hier Text eingeben.</string>
-    <string name="buttonTextOkay">OK</string>
-    <string name="timeRemaining">Nächster Fragebogen in %m %s</string>
-    <string name="menuText">Starte Fragebogen</string>
+    <string name="hintTextAnswer">Bitte hier klicken.</string>
+    <string name="buttonTextOkay">Absenden</string>
+    <string name="timeRemaining">Nächster Fragebogen geplant in %m %s</string>
+    <string name="menuText">Starte Frage-bogen</string>
     <string name="noQuestionnaires">Fragebogen konnte nicht geladen werden.</string>
+
+    <string name="menuBack">Zurück</string>
+    <string name="menuHelp">Hilfe</string>
+    <string name="helpHinweis"><b>Hinweis:</b> Hin und wieder kommt es vor, dass bestimmte
+        Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann
+        automatisch eine Antwort wieder ab.</string>
 </resources>

@@ -6,7 +6,6 @@
         <item>RMS</item>
         <item>ZCR</item>
         <item>PSD</item>
-        <!--<item>SRMR</item>-->
     </string-array>
 
     <string-array name="samplingrateEntries">
@@ -20,5 +19,21 @@
         <item>44100</item>
         <item>16000</item>
     </string-array>
-    
+
+    <string-array name="permissionMessages">
+        <item>Please grant permission to read/write storage</item>
+        <item>Please grant permission to read/write storage</item>
+        <item>Please grant permission to read/write storage</item>
+        <item>Come on.</item>
+        <item>Really? This is how you want to play?</item>
+        <item>Dont be like that!</item>
+        <item>You are being ridiculous</item>
+        <item>Goddamn it, give me permission!</item>
+        <item>GIVE ME PERMISSION!!!</item>
+        <item>SCREW YOU!</item>
+    </string-array>
+
+    <integer-array name="battery_placeholder_weight">
+        <item name="battery_placeholder_weight">3</item>
+    </integer-array>
 </resources>

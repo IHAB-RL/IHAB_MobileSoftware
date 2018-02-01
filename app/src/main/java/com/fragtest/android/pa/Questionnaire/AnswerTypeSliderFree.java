@@ -42,13 +42,14 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
     private int nTextViewHeight;
+    private boolean isImmersive = false;
 
     // These serve to normalise pixel/value for now
     private int mMagicNumber1 = 140;
     private int mMagicNumber2 = 151;
 
     public AnswerTypeSliderFree(Context context, Questionnaire questionnaire,
-                                AnswerLayout qParent, int nQuestionId) {
+                                AnswerLayout qParent, int nQuestionId, boolean immersive) {
 
         //TODO: Resolve magic numbers
 
@@ -57,6 +58,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mQuestionnaire = questionnaire;
         mListOfAnswers = new ArrayList<>();
         mQuestionId = nQuestionId;
+        isImmersive = immersive;
 
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -68,7 +70,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 1.f
         ));
 
-        mUsableHeight = (new Units(mContext)).getUsableSliderHeight();
+        mUsableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive);
 
         /**
          *

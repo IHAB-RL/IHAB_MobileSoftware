@@ -9,9 +9,10 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-
     <uses-feature android:name="android.hardware.camera"
         android:required="false" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BATTERY_STATS"/>
 
     <application
         android:allowBackup="true"
@@ -27,7 +28,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.HOME" />
+                <!--<category android:name="android.intent.category.HOME" />-->
             </intent-filter>
         </activity>
 
@@ -36,14 +37,19 @@
             android:screenOrientation="portrait" >
         </activity>
 
-        <!--
-        <activity
-            android:name=".Questionnaire.PermissionActivity"
-            android:screenOrientation="portrait">
-        </activity>-->
-        <receiver android:name=".Core.EventReceiver" />
+        <!-- Receiver needed for Alarm function -->
+        <receiver android:name=".Core.EventReceiver"
+            android:enabled="true"/>
 
-        <receiver
+        <!-- Receiver needed for Autostart function of the app -->
+        <receiver android:name="com.fragtest.android.pa.Core.BootReceiver">
+            <intent-filter >
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+
+        <!--<receiver
             android:name="com.fragtest.android.pa.AutostartReceiver"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
 
@@ -52,9 +58,8 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </receiver>
+        </receiver>-->
 
-        <!-- DOES THIS NEED TO BE REMOTE???  Because that creates several obstacles-->
         <service android:name=".ControlService"
                 android:process=":remote" />
 

@@ -40,7 +40,8 @@
 
     <dimen name="textSizeQuestion">10sp</dimen>
     <dimen name="textSizeAnswer">8sp</dimen>
-    <dimen name="textSizeProposed">14sp</dimen>
+    <dimen name="textSizeProposed">26sp</dimen>
+    <dimen name="textSizeAnswerHelp">7sp</dimen>
 
     <dimen name="minHeightRadio">20px</dimen>
     <dimen name="minHeightCheckBox">20px</dimen>
@@ -62,5 +63,19 @@
     <dimen name="toolBarHeightWithPadding">48dp</dimen>
     <dimen name="progressBarHeight">6dp</dimen>
     <dimen name="actionBarHeight">32dp</dimen>
+
+    <dimen name="battery_margin_left">1dp</dimen>
+    <dimen name="battery_margin_right">1dp</dimen>
+    <dimen name="batteryWidth">12dp</dimen>
+    <dimen name="batteryHeight">24dp</dimen>
+    <dimen name="battery_margin_top">4dp</dimen>
+    <dimen name="battery_margin_bottom">4dp</dimen>
+
+    <dimen name="charging_margin_left">1dp</dimen>
+    <dimen name="charging_margin_right">1dp</dimen>
+    <dimen name="charging_margin_top">2dp</dimen>
+    <dimen name="charging_margin_bottom">2dp</dimen>
+    <dimen name="charging_width">10dp</dimen>
+    <dimen name="charging_height">20dp</dimen>
 
 </resources>

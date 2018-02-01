@@ -2,6 +2,7 @@ package com.fragtest.android.pa.Menu;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
@@ -19,7 +20,7 @@ import com.fragtest.android.pa.R;
 
 public class MenuPage extends AppCompatActivity {
 
-    private final static String LOG_STRING = "MenuPage";
+    private final static String LOG = "MenuPage";
     private String mCountDownString;
     private Context mContext;
     private QuestionnairePagerAdapter mContextQPA;
@@ -31,7 +32,6 @@ public class MenuPage extends AppCompatActivity {
 
         mContext = context;
         mContextQPA = contextQPA;
-        //questFileName = mContext.getResources().getString(R.string.menuText);
         StartText = "";
         mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
         mTempTextCountDownRemaining = mCountDownString.split("%");
@@ -44,6 +44,7 @@ public class MenuPage extends AppCompatActivity {
         LinearLayout menuLayout = new LinearLayout(mContext);
         menuLayout.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
         menuLayout.setOrientation(LinearLayout.VERTICAL);
+        //menuLayout.setBackgroundColor(Color.GREEN);
 
         // Top View carrying countdown
         mCountDownRemaining = new TextView(mContext);
@@ -61,7 +62,7 @@ public class MenuPage extends AppCompatActivity {
         centerLayout.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
         LinearLayout.LayoutParams centerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0, 0.4f
+                0, 0.7f
         );
         centerLayout.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
 
@@ -69,7 +70,8 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire = new TextView(mContext);
         mStartQuestionnaire.setText("");
         mStartQuestionnaire.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
-        mStartQuestionnaire.setMaxWidth(700);
+        mStartQuestionnaire.setTypeface(Typeface.DEFAULT);
+        //mStartQuestionnaire.setMaxWidth(1000);
         mStartQuestionnaire.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
         mStartQuestionnaire.setBackgroundColor(Color.WHITE);
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
@@ -92,16 +94,11 @@ public class MenuPage extends AppCompatActivity {
     // Simply increases text size of "Start Questionnaire" item in user menu
     public void increaseStartTextSize() {
 
-        String[] temp = StartText.split(" ");
-        String tempText = "";
-        for (int iItem = 0; iItem < temp.length; iItem++) {
-            tempText += temp[iItem];
-            tempText += "\n";
-        }
-        mStartQuestionnaire.setText(tempText);
+        mStartQuestionnaire.setText(formatString(StartText));
         mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         mStartQuestionnaire.setTextSize(mContext.getResources().
                 getDimension(R.dimen.textSizeProposed));
+        mStartQuestionnaire.setTypeface(null, Typeface.BOLD);
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -111,21 +108,37 @@ public class MenuPage extends AppCompatActivity {
     }
 
     public void setText(String text) {
+
         StartText = text;
-        mStartQuestionnaire.setText(text);
+        mStartQuestionnaire.setText(cleanUpString(text));
         mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
     }
 
+    public void setText() {
+        mStartQuestionnaire.setText(mCountDownString);
+    }
+
     public void resetStartTextSize() {
+        mStartQuestionnaire.setText(cleanUpString(StartText));
         mStartQuestionnaire.setTextSize(mContext.getResources().
                 getDimension(R.dimen.textSizeAnswer));
+        mStartQuestionnaire.setTypeface(Typeface.DEFAULT);
     }
+
     // Handles update of visible text countdown
     public void updateCountdownText(int seconds) {
         int minutesRemaining = seconds / 60;
         int secondsRemaining = seconds - minutesRemaining * 60;
         mCountDownRemaining.setText("" + mTempTextCountDownRemaining[0] + minutesRemaining +
                 mTempTextCountDownRemaining[1] + secondsRemaining + mTempTextCountDownRemaining[2]);
+    }
+
+    private String cleanUpString(String inString) {
+        return inString.replace("-","");
+    }
+
+    private String formatString(String inString) {
+        return inString.replace(" ","\n").replace("-","-\n");
     }
 
     public void updateCountDownText(String text) {

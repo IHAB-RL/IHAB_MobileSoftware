@@ -34,14 +34,22 @@ public class Units extends AppCompatActivity {
 
     public static int getScreenWidth() { return SCREEN_SIZE_WIDTH; }
 
-    public int getUsableSliderHeight() {
-        return getScreenHeight() -
-                getStatusBarHeight() -
-                (int) mContext.getResources().getDimension(R.dimen.toolBarHeightWithPadding) -
-                (int) mContext.getResources().getDimension(R.dimen.progressBarHeight) -
-                (int) mContext.getResources().getDimension(R.dimen.questionTextHeight) -
-                (int) mContext.getResources().getDimension(R.dimen.preferencesButtonHeight) -
-                (int) mContext.getResources().getDimension(R.dimen.actionBarHeight);
+    public int getUsableSliderHeight(boolean isImmersive) {
+
+        if (isImmersive) {
+            return getScreenHeight() -
+                    (int) mContext.getResources().getDimension(R.dimen.toolBarHeightWithPadding) -
+                    (int) mContext.getResources().getDimension(R.dimen.progressBarHeight) -
+                    (int) mContext.getResources().getDimension(R.dimen.questionTextHeight);
+        } else {
+            return getScreenHeight() -
+                    getStatusBarHeight() -
+                    (int) mContext.getResources().getDimension(R.dimen.toolBarHeightWithPadding) -
+                    (int) mContext.getResources().getDimension(R.dimen.progressBarHeight) -
+                    (int) mContext.getResources().getDimension(R.dimen.questionTextHeight) -
+                    (int) mContext.getResources().getDimension(R.dimen.preferencesButtonHeight) -
+                    (int) mContext.getResources().getDimension(R.dimen.actionBarHeight);
+        }
     }
 
     public int getStatusBarHeight() {

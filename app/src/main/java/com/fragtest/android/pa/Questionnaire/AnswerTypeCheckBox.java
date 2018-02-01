@@ -5,7 +5,6 @@ import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.CheckBox;
@@ -31,6 +30,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
     private final List<Integer> mListOfDefaults;
     private final Questionnaire mQuestionnaire;
     public LinearLayout.LayoutParams answerParams;
+    private int mExclusiveId = -1;
 
     public AnswerTypeCheckBox(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
@@ -43,10 +43,13 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
 
     }
 
-    public boolean addAnswer(int nAnswerId, String sAnswer, int nGroup, boolean isDefault) {
+    public boolean addAnswer(int nAnswerId, String sAnswer, int nGroup, boolean isDefault, boolean isExclusive) {
         mListOfAnswers.add(new StringIntegerAndInteger(sAnswer, nAnswerId, nGroup));
         if (isDefault) {
             mListOfDefaults.add(mListOfAnswers.size() - 1);
+        }
+        if (isExclusive) {
+            mExclusiveId = nAnswerId;
         }
         return true;
     }
@@ -63,13 +66,15 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
             checkBox.setText(currentString);
             checkBox.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
             checkBox.setChecked(false);
-            checkBox.setGravity(Gravity.START);
-            checkBox.setPadding(
+            checkBox.setGravity(Gravity.CENTER_VERTICAL);
+            //checkBox.setGravity(Gravity.START);
+            checkBox.setPadding(24, 24, 24, 24);
+            /*checkBox.setPadding(
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Left),
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Top),
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Right),
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Bottom)
-            );
+            );*/
             checkBox.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
             checkBox.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
             int states[][] = {{android.R.attr.state_checked}, {}};
@@ -105,8 +110,6 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
             }
 
-            Log.i(LOG, "Checkbox: "+checkBox.getId());
-
             checkBox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -115,6 +118,11 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
 
                         if (group != -1) {
                             unCheckGroup(group);
+                        }
+                        if (currentId == mExclusiveId) {
+                            unCheckEverythingElse();
+                        } else {
+                            unCheckExclusive();
                         }
                         checkBox.setChecked(true);
                         mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
@@ -129,7 +137,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         return true;
     }
 
-    public boolean unCheckGroup(int nGroup) {
+    private boolean unCheckGroup(int nGroup) {
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
             if (mListOfAnswers.get(iAnswer).getGroup() == nGroup) {
                 int currentId = mListOfAnswers.get(iAnswer).getId();
@@ -139,6 +147,23 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    private void unCheckExclusive() {
+        final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(mExclusiveId);
+        checkBox.setChecked(false);
+        mQuestionnaire.removeIdFromEvaluationList(mExclusiveId);
+    }
+
+    private void unCheckEverythingElse() {
+        for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
+            if (mListOfAnswers.get(iAnswer).getId() != mExclusiveId) {
+                int currentId = mListOfAnswers.get(iAnswer).getId();
+                final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(currentId);
+                checkBox.setChecked(false);
+                mQuestionnaire.removeIdFromEvaluationList(currentId);
+            }
+        }
     }
 
 }
