@@ -297,6 +297,8 @@ public class ControlService extends Service {
                     Logger.info("Requesting stop caching audio");
 //                    audioRecorder.stop();
                     stageManager.stop();
+                    isRecording = false;
+                    messageClient(MSG_GET_STATUS);
                     break;
 
                 case MSG_RECORDING_STOPPED:

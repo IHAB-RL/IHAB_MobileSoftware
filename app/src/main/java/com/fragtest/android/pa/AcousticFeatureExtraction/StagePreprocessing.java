@@ -14,9 +14,12 @@ public class StagePreprocessing extends Stage {
 
     final static String LOG = "StagePreprocessing";
 
-    StagePreprocessing(LinkedBlockingQueue queue, int nConsumer, int id) {
+    int samplerate;
+
+    StagePreprocessing(LinkedBlockingQueue queue, int nConsumer, int id, int samplerate) {
         super(queue, nConsumer, id);
 
+        this.samplerate = samplerate;
     }
 
     @Override
@@ -28,7 +31,7 @@ public class StagePreprocessing extends Stage {
 
         FilterHP[] highpass = new FilterHP[2];
         for (int i = 0; i < 2; i++) {
-            highpass[i] = new FilterHP(16000, 250);
+            highpass[i] = new FilterHP(samplerate, 250);
         }
 
         while (!Thread.currentThread().isInterrupted() && !abort) {

@@ -22,7 +22,7 @@ public class AudioFileIO {
     public static final String CACHE_WAVE = "wav";
     public static final String CACHE_RAW = "raw";
 
-    public String filename;
+    public String filename = null;
 
     int samplerate   = 0;
     int channels     = 0;
@@ -31,6 +31,10 @@ public class AudioFileIO {
 
     File file               = null;
     DataOutputStream stream = null;
+
+    public AudioFileIO(String filename) {
+        this.filename = filename;
+    }
 
     // create main folder
     public String getFolderPath(){
@@ -44,15 +48,21 @@ public class AudioFileIO {
     // build filename
     public String getFilename(boolean wavHeader) {
 
-        String _filename = new StringBuilder()
+        String tmp = filename;
+
+        if (filename == null) {
+            tmp = Timestamp.getTimestamp(3);
+        }
+
+        String filename = new StringBuilder()
                 .append(getFolderPath())
                 .append(File.separator)
-                .append(Timestamp.getTimestamp(3))
+                .append(tmp)
                 .append(".")
                 .append(getExtension(wavHeader))
                 .toString();
 
-        return _filename;
+        return filename;
     }
 
     // file extension depending on format

@@ -66,7 +66,7 @@ public class ProcessingRunnable implements Runnable {
         samplingrate = BasicProcessingThread.samplerate;
         timestamp = BasicProcessingThread.timestamp;
 
-		ioClass = new AudioFileIO();
+		ioClass = new AudioFileIO("test");
 
 		nProcBlocks = (int) Math.floor((audioData[0].length - procBlockSize) / procHopSize) + 1;
 		blockData = new float[2][procBlockSize];                          // processing block

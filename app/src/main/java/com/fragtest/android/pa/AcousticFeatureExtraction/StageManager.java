@@ -16,16 +16,18 @@ public class StageManager {
 
     public StageManager() {
 
+        int samplerate = 44100;
+
         LinkedBlockingQueue[] queue1, queue2;
 
-        audioCapture = new StageAudioCapture(2, 1);
+        audioCapture = new StageAudioCapture(2, 1, samplerate);
         queue1 = audioCapture.getQueues();
 
-        preprocFilter = new StagePreprocessing(queue1[0], 1, 2);
+        preprocFilter = new StagePreprocessing(queue1[0], 1, 2, samplerate);
         queue2= preprocFilter.getQueues();
 
-        audioWriteRaw = new StageAudioWrite(queue1[1], 3);
-        audioWriteFilter = new StageAudioWrite(queue2[0], 4);
+        audioWriteRaw = new StageAudioWrite(queue1[1], 3, samplerate, "raw");
+        audioWriteFilter = new StageAudioWrite(queue2[0], 4, samplerate, "filter");
 
     }
 

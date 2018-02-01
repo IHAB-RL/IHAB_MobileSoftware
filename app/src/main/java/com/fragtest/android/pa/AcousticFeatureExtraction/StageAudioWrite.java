@@ -23,12 +23,12 @@ public class StageAudioWrite extends Stage {
     AudioFileIO io;
     DataOutputStream stream;
 
-    StageAudioWrite(LinkedBlockingQueue queue, int id) {
-        super(queue, -1, id );
+    StageAudioWrite(LinkedBlockingQueue queue, int id, int samplerate, String filename) {
+        super(queue, 0, id );
 
-        io = new AudioFileIO();
+        io = new AudioFileIO(filename);
         stream = io.openDataOutStream(
-                16000,
+                samplerate,
                 2,
                 16,
                 true);
@@ -42,9 +42,9 @@ public class StageAudioWrite extends Stage {
 
         Log.d(LOG, "Start consuming");
 
-        while (!Thread.currentThread().isInterrupted() && !abort) {
+        float[][] data;
 
-            float[][] data;
+        while (!Thread.currentThread().isInterrupted() && !abort) {
 
             data = receive();
 
